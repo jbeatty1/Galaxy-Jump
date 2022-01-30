@@ -1,2 +1,18 @@
-# Galaxy-Jump
-Fundamentals of Game Design Project
+Tony Imbesi, 1/30/2022
+
+I followed a tutorial at http://phaser.io/tutorials/making-your-first-phaser-3-game/part7 to get down the basics for implementing things in the Phaser 3 game engine.
+When I got to part 7, I took the opportunity to code in a rough draft of some of the most fundamental player movement mechanics.
+These include more fluid horizontal movement, conservation of momentum, and the ability to move faster than your normal running speed.
+Please look into how you can change the jump height with longer or shorter key presses, as I believe that will also be helpful.
+After that, I believe we can look into adding in other moves and physics-based objects to interact with.
+
+
+The player character and platforms use the Arcade Physics engine found in Phaser 3, which is good for simple physics. 
+For things like movable boxes or balls that would benefit from more complex physics, we will need Matter.js, the other supported physics engine.
+Please look into how we can get Matter.js to work with what we have currently.
+See the difference between the two engines for yourself at http://labs.phaser.io/view.html?src=src\physics\multi\arcade%20and%20matter.js&rnd=0.18382359977898455
+This link has all the official physics demos for both engines. We won't need everything in here, of course, but it's good to see things demonstrated. http://labs.phaser.io/index.html?dir=physics/&q=
+
+
+NOTICE: You will need to have phaser.js from https://github.com/photonstorm/phaser/releases/tag/v3.55.2 in the same directory as this .html file in order to run it.
+The JavaScript uses that file as a source for various useful library methods.

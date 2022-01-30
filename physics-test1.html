@@ -1,0 +1,217 @@
+<!-- 
+Physics test focusing on basic player movements. For Galaxy Jump project.
+
+This whole code is a modified version of the part7.html example at http://phaser.io/tutorials/making-your-first-phaser-3-game/part7.
+If you want to see what everything else is, I would recommend looking at the previous parts in the tutorial. I disregarded the last two parts.
+
+This is made using the Phaser 3 game engine from https://github.com/photonstorm/phaser
+-Tony Imbesi, 1/29/2022
+
+License: https://opensource.org/licenses/MIT|MIT License
+Copyright 2020 Photon Storm Ltd.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+-->
+
+
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Making your first Phaser 3 Game - Part 1</title>
+    <script src="phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+    // Player's movement variables:
+    var PVEL_MAX = 320; // Soft limit to max horizontal speed. Can be broken by various methods.
+    // We can get the player's velocity at any time using player.body.velocity.x
+    var PXACCEL = 1800; // Default horizontal acceleration
+    var PJUMP = -800; // Jump height
+    var PDRAG = 800; // Default drag
+    var PDRAG_AIR = 80; // Air drag
+    var PGRAV = 1000; // Player gravity
+
+    var config = {
+        type: Phaser.AUTO,
+        width: 1200, // Screen width
+        height: 1000, // Screen height
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 300 },
+                debug: true
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    var game = new Phaser.Game(config);
+
+    function preload ()
+    {
+        this.load.setBaseURL('https://labs.phaser.io');
+        this.load.image('sky', 'assets/skies/sky1.png');
+        this.load.image('ground', 'assets/sprites/platform.png');
+        // this.load.image('star', 'assets/star.png'); // not used
+        // this.load.image('bomb', 'assets/bomb.png');
+        this.load.spritesheet('dude', 'assets/sprites/dude.png', { frameWidth: 32, frameHeight: 48 });
+    }
+
+    var platforms;
+    var player;
+    var platCollider;
+    var text1;
+    var text2;
+
+    function create ()
+    {
+        this.add.image(0, 0, 'sky').setOrigin(0, 0).setScale(2);
+        
+        platforms = this.physics.add.staticGroup();
+
+        // Make the platforms
+        platforms.create(400, 900, 'ground').setScale(4).refreshBody(); // Floor platform
+        platforms.create(600, 600, 'ground').setScale(0.6).refreshBody();
+        platforms.create(50, 450, 'ground');
+        platforms.create(800, 390, 'ground').setScale(0.5).refreshBody();
+        platforms.create(1150, 600, 'ground').setOrigin(0,0).setScale(0.3).refreshBody();
+
+        // Make the preset player character
+        player = this.physics.add.sprite(100, 500, 'dude');
+
+        // Player Physics
+        player.setBounce(0.5, 0); // 1st parameter is x-bounce, 2nd is y-bounce
+        player.body.setGravityY(PGRAV);
+        // player.body.setFrictionX(3); // I couldn't get this to work, but I'm using drag to slow the player down anyway.
+        player.body.setDragX(PDRAG);
+
+        player.setCollideWorldBounds(true);
+        platCollider = this.physics.add.collider(player, platforms);
+
+        // Player animations. The keys can be remade using an enumeration.
+        this.anims.create({
+            key: 'left',
+            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'turn',
+            frames: [ { key: 'dude', frame: 4 } ],
+            frameRate: 20
+        });
+
+        this.anims.create({
+            key: 'right',
+            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // This thing is similar to an input listener.
+        cursors = this.input.keyboard.createCursorKeys();
+
+        // Debug text
+        text1 = this.add.text(10, 10, '', { font: '16px Courier', fill: '#00ff00' });
+        text2 = this.add.text(10, 40, '', { font: '16px Courier', fill: '#00ff00' });
+    }
+
+
+    function update ()
+    {
+        // Controls and movement. Could be remade into a switch statement.
+        if (cursors.left.isDown)
+        {
+            moveX(-PXACCEL);
+
+            player.anims.play('left', true);
+        }
+        else if (cursors.right.isDown)
+        {
+            moveX(PXACCEL);
+
+            player.anims.play('right', true);
+        }
+        // Else: no buttons pressed. Set acceleration to 0 and decrease speed with friction.
+        else
+        {
+            player.setAccelerationX(0);
+            player.anims.play('turn');
+        }
+
+        // Jump
+        if (cursors.up.isDown && player.body.touching.down)
+        {
+            player.setVelocityY(PJUMP);
+        }
+
+        // Player is slowed down more on the ground
+        if (player.body.touching.down){
+            player.setDragX(PDRAG);
+        }
+        else {
+            player.setDragX(PDRAG_AIR);
+        }
+
+        // DEBUG FEATURE: Increase x-velocity with space
+        if (cursors.space.isDown)
+        {
+            if (player.body.velocity.x > 0){
+                player.setVelocityX(900);
+            }
+            else if (player.body.velocity.x < 0){
+                player.setVelocityX(-900);
+            }
+        }
+
+        // Debug text:
+        text1.setText('XVel: ' + player.body.velocity.x + ' PVEL_MAX: ' + PVEL_MAX + ' XAcc: ' + player.body.acceleration.x);
+        text2.setText("Arrow keys to move left/right and jump. Press SPACE to go faster than normal to the left or right.");
+    } // END update
+
+   /*
+    * Moves left or right by changing the player's acceleration.
+    * 
+    * @param ax the left or right acceleration. Negative = left, positive = right.
+    *
+    */
+    function moveX(ax)
+    {
+        var pvx = player.body.velocity.x;
+        // When the player is moving beyond top speed AND trying to move in the same direction as pvx, do not accelerate any more.
+        if ((-PVEL_MAX <= pvx && ax < 0) 
+            || (pvx <= PVEL_MAX && ax > 0))
+            {
+            player.setAccelerationX(ax);
+        }
+        else {
+            player.setAccelerationX(0);
+        }
+
+        // Fix the velocity problem!
+    } // END move
+
+</script>
+
+</body>
+</html>
