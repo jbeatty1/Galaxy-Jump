@@ -3,6 +3,8 @@ Fundamentals of Game Design Project
 
 ## Update from Tony Imbesi, 1/30/2022
 
+Hi everyone,
+
 I added the file physics-test1.html to the branch. Please download and test it for yourself.
 NOTICE: You will need to have phaser.js from https://github.com/photonstorm/phaser/releases/tag/v3.55.2 in the same directory as this .html file in order to run it.
 The JavaScript uses that file as a source for various useful library methods.
@@ -24,3 +26,6 @@ This link has all the official physics demos for both engines. We won't need eve
 
 
 I feel like we can build up a lot of momentum by researching all these things further. Please see what you can do to contribute to this project!
+
+Thank you
+-Tony Imbesi
