@@ -2,10 +2,10 @@
 Physics test adding the side kick. For Galaxy Jump project.
 
 This whole code is a modified version of the part7.html example at http://phaser.io/tutorials/making-your-first-phaser-3-game/part7.
-If you want to see what everything else is, I would recommend looking at the previous parts in the tutorial. I disregarded the last two parts.
+If you want to see what everything else is, I would recommend looking at the other parts in this tutorial.
 
 This is made using the Phaser 3 game engine from https://github.com/photonstorm/phaser
--Tony Imbesi, 1/29/2022
+-Tony Imbesi, 2/14/2022
 
 License: https://opensource.org/licenses/MIT|MIT License
 Copyright 2020 Photon Storm Ltd.
@@ -297,7 +297,7 @@ function update ()
     text1.setText('XVel: ' + player.body.velocity.x + ' PVEL_MAX: ' + PVEL_MAX + ' XAcc: ' + player.body.acceleration.x + ' YVel: ' + player.body.velocity.y + ' Max XVel: ' + maxXVel + ' YAcc: ' + player.body.acceleration.y);
     text2.setText("TickCount: " + tickCount + " \nsideKick: " + sideKick + " kickDirection: " + kickDirection 
         + " xFacing: " + xFacing + " tickCount < ticksToKickEnd: " + (tickCount < ticksToKickEnd) + " reboundRan: " + reboundRan
-        + "\nArrow keys to move left/right and jump. Press SPACE to go faster than normal to the left or right.");
+        + "\nArrow keys to move left/right and jump. Press SPACE to kick off a wall. Press SHIFT to go back to the starting position.");
 } // END update
 
 /*
