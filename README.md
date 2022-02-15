@@ -30,3 +30,8 @@ I feel like we can build up a lot of momentum by researching all these things fu
 Thank you
 
 -Tony Imbesi
+
+
+## Update from Tony Imbesi, 2/14/2022
+
+I've managed to implement variable jump height and a side kick. All this can be found in physics-test3.html. Hold down the up arrow to jump higher. Pressing space will create a hitbox in the direction you're facing. If the hitbox collides with the terrain, you will be kicked away. You can conserve the momentum from the kick by jumping repeatedly. Pressing shift teleports you back to the top for testing purposes.
