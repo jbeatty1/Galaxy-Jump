@@ -1,37 +1,22 @@
-# Galaxy-Jump
+# Galaxy Jump
 Fundamentals of Game Design Project
 
-## Update from Tony Imbesi, 1/30/2022
+## Update from Tony Imbesi, 2/23/2022
 
 Hi everyone,
 
-I added the file physics-test1.html to the branch. Please download and test it for yourself.
+I added the file physics-test4.html to the branch. Please download and test it for yourself.
 NOTICE: You will need to have phaser.js from https://github.com/photonstorm/phaser/releases/tag/v3.55.2 in the same directory as this .html file in order to run it.
 The JavaScript uses that file as a source for various useful library methods.
 
+I have made some significant discoveries here. Here are some of the things I have found out and implemented in this file:
+- Scrollable camera!! The Phaser engine has plenty of helpful methods to make a camera that follows the player around. This should be the first thing you notice upon running the file.
+- Changing sprite hitboxes: I thought it would be helpful to make it so the player's sprite can be larger than its hitbox. That way, we can have sprites where the character's legs are sticking out one way, but only its main body is vulnerable to damage or collision with terrain. Again, there were some methods that made this task easy once I discovered what they were.
 
-I decided to commit to the Phaser 3 game engine. I followed a tutorial at http://phaser.io/tutorials/making-your-first-phaser-3-game/part7 to learn how to implement basic platform game features. 
-When I got to part 7, I took the opportunity to code in a rough draft of some of the most fundamental player movement mechanics.
-These include more fluid horizontal movement, conservation of momentum, and the ability to move faster than your normal running speed.
-Please look into how you can change the jump height with longer or shorter key presses, as I believe that will also be helpful.
-After that, I believe we can look into adding in other moves and physics-based objects to interact with.
+Things I will investigate soon:
+- So far, the program has been composed of only one "scene." The scene is an object that loads all the assets and other stuff with the "preload" and "create" methods and runs the gameplay with the "update" method. You can have one scene unload itself and load up another with a "start" function. To me, each scene could represent a gameplay mode. It should be possible to make multiple levels by creating one subclass of Scene that holds all the basic game mechanics, then making children of that subclass that hold all the level-specific features like terrain and elements. Other scenes can probably be used for stuff like menus or cutscenes.
+- I saw that someone made some kind of specialized Phaser editor software that lets you view a Phaser scene and move stuff around. That could be helpful for level design, but I haven't actually gotten to testing it out myself. If it's as good as I hope it is, it will be much better than fiddling with the x and y positions of every element in the scene.
 
+I used a placeholder sprite in the project update video, but I haven't figured out how to make it so you can use it on your own computers easily. In order to load assets from your computer in Javascript, you need to make a web server and run the Javascript on the server. The easiest option for me was to use http-server at https://www.npmjs.com/package/http-server. Once you figure out how to install it, you should be able to make a server to run local software on it with one console command. We can work out the details later.
 
-The player character and platforms use the Arcade Physics engine found in Phaser 3, which is good for simple physics. 
-For things like movable boxes or balls that would benefit from more complex physics, we will need Matter.js, the other supported physics engine.
-Please look into how we can get Matter.js to work with what we have currently.
-See the difference between the two engines for yourself at http://labs.phaser.io/view.html?src=src\physics\multi\arcade%20and%20matter.js&rnd=0.18382359977898455
-
-This link has all the official physics demos for both engines. We won't need everything in here, of course, but it's good to see things demonstrated. http://labs.phaser.io/index.html?dir=physics/&q=
-
-
-I feel like we can build up a lot of momentum by researching all these things further. Please see what you can do to contribute to this project!
-
-Thank you
-
--Tony Imbesi
-
-
-## Update from Tony Imbesi, 2/14/2022
-
-I've managed to implement variable jump height and a side kick. All this can be found in physics-test3.html. Hold down the up arrow to jump higher. Pressing space will create a hitbox in the direction you're facing. If the hitbox collides with the terrain, you will be kicked away. You can conserve the momentum from the kick by jumping repeatedly. Pressing shift teleports you back to the top for testing purposes.
+I will have my tutorial ready for everyone by the end of this week. Thanks for reading!
