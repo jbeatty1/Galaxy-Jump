@@ -1,16 +1,17 @@
-// Code from https://phasertutorials.com/creating-a-phaser-3-template-part-3/
-
+// Begin modified code from https://phasertutorials.com/creating-a-phaser-3-template-part-3/
 /*
-    This scene controls the game's global settings.
+    This class controls the game's global settings.
     Other scenes can refer to the methods by taking the following steps:
-    - Create an instance of this class: model = new Model();
-    - Access bgMusicPlaying using model.bgMusicPlaying, for example
+    - Access the global instance of this model by calling this.sys.game.globals.model
+    - Access properties like bgMusicPlaying by using model.bgMusicPlaying, for example
 */
 export default class Model {
     constructor() {
       this._soundOn = true;
-      this._musicOn = true;
+      this._musicOn = false;
       this._bgMusicPlaying = false;
+
+      this._msUntilTick = 16;
     }
     set musicOn(value) {
       this._musicOn = value;
@@ -30,4 +31,8 @@ export default class Model {
     get bgMusicPlaying() {
       return this._bgMusicPlaying;
     }
+    get msUntilTick() {
+      return this._msUntilTick;
+    }
   }
+  // End modified code from https://phasertutorials.com/creating-a-phaser-3-template-part-3/

@@ -80,7 +80,9 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.image('phaserLogo', 'assets/logo.png');
         this.load.image('box', 'assets/ui/grey_box.png');
         this.load.image('checkedBox', 'assets/ui/blue_boxCheckmark.png');
-        this.load.audio('titleMusic', ['assets/music/spelunky1.mp3']);        
+        this.load.audio('titleMusic', ['assets/music/spelunky1.mp3']);
+        
+        this.load.spritesheet('dude', 'assets/player/dude.png', { frameWidth: 32, frameHeight: 48 });
   }
 
   create () {
@@ -91,7 +93,6 @@ export default class PreloaderScene extends Phaser.Scene {
   }
 
   ready () {
-        this.scene.start('Title');
         this.readyCount++;
         if (this.readyCount === 2) {
           this.scene.start('Title');
