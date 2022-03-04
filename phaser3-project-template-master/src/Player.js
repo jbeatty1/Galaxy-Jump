@@ -5,7 +5,7 @@ import 'phaser';
  * This player can be added to any scene by creating a new Player object.
  * 
  * @author Tony Imbesi
- * @version 3/1/2022
+ * @version 3/4/2022
  */
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     /**
@@ -325,7 +325,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         /** Do a slide with attack on ground. You can still jump even if airborne after doing this move! */
-        if (this.cursors.attack.isDown && ((this.cursors.down.isDown && !this.body.onFloor()) || (!this.cursors.down.isDown && this.body.onFloor()))
+        if (this.cursors.attack.isDown 
+            && ((this.cursors.down.isDown && !this.body.onFloor()) 
+                || (!(this.canDropKick && this.cursors.down.isDown) && this.body.onFloor()))
             && this.canSlide && !this.sliding && this.xFacing !== this.xDirection.NONE && !this.dropKicking) 
         {
             this.sliding = true;
@@ -447,6 +449,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.dropKickBox.setActive(false);
 
             }
+        }
+        if (time >= this.ticksToDropKickEnd) {
+            this.dropKicking = false;
         }
         
         /** Do a flip by holding up while attempting a side kick */
