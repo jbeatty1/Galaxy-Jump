@@ -5,7 +5,7 @@ import 'phaser';
  * This player can be added to any scene by creating a new Player object.
  * 
  * @author Tony Imbesi
- * @version 3/1/2022
+ * @version 3/4/2022
  */
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     /**
