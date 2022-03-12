@@ -36,6 +36,8 @@ export default class PlayerController {
             ATTACK: 5,
             PAUSE: 6
         };
+
+        this.BUFFER = 100; // Time in milliseconds before a button press is no longer counted
     }
 
     /**
@@ -56,6 +58,16 @@ export default class PlayerController {
         this.pause = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         this.shift = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         // End modified code from https://labs.phaser.io/edit.html?src=src/input/keyboard/add%20key.js
+    }
+
+    /**
+     * Returns if the key was held down for no longer than a time in milliseconds.
+     * 
+     * @param {Phaser.Input.Keyboard.Key} key the key to pass
+     * @returns true if the key was just pressed, false otherwise
+     */
+    pressed(key) {
+        return (key.getDuration() > 1 && key.getDuration() <= this.BUFFER);
     }
 
     /**

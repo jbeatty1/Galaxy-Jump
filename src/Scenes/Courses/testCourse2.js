@@ -210,7 +210,8 @@ export default class testCourse2 extends Phaser.Scene {
         // }
 
         // Controls and movement. Could be remade into a switch statement.
-        this.player.update(time);
+        if (!this.physics.world.isPaused)
+            this.player.update(time, delta);
 
         // DEBUG: Record maximum y velocity after each fall
         // if (!this.player.body.onFloor()) {

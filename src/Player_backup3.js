@@ -4,6 +4,12 @@ import 'phaser';
  * Class modeling the player character with all movement abilities.
  * This player can be added to any scene by creating a new Player object.
  * 
+ * 
+ * Major changes:
+ * - Made it so the player's time variables are correctly saved if the game pauses
+ * - Added an option to jump after the dropkick. The game will temporarily go into
+ *      slow motion after dropkicking a wall. If you jump or wait too long, 
+ *      the game speed returns to normal.
  * @author Tony Imbesi
  * @version 3/4/2022
  */
@@ -34,6 +40,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         /** Start of player variables */
     
         this.INTERVAL = 16; // Number of ticks in milliseconds to multiply other timer variables
+        this.ticks = 0;
 
         // Player's appearance:
         this.P_WIDTH = 32; // Width of the sprite
@@ -43,7 +50,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.P_HCROUCH = 20; // Height while crouching
 
         // Player's movement constants:
-        this.P_XVEL_SOFTMAX = 320; // Soft limit to max horizontal speed. Can be broken by various methods.
+        this.P_XVEL_SOFTMAX = 340; // Soft limit to max horizontal speed. Can be broken by various methods.
         this.P_XVEL_HARDMAX = 900; // Hard limit to max horizontal speed
         this.P_YVEL_HARDMAX = 900; // Hard limit to max vertical speed
         // We can get the player's velocity at any time using player.body.velocity.x
@@ -52,17 +59,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.P_JUMP_ACCEL = -2750; // Jump acceleration. Vertical acceleration is unchanged by gravity but still affects vertical movement.
         this.P_JUMP_BRAKE = 800; // Cancel out jump acceleration at the end of a jump
         this.P_DRAG = 800; // Default drag
+        this.P_DRAG_FAST = this.P_DRAG / 2; // Drag when moving quickly
         this.P_DRAG_AIR = 80; // Air drag
         this.P_GRAV = 1700; // Player gravity. Total gravity = world gravity + player gravity
-        this.P_BOUNCE = 0.5;
+        this.P_BOUNCE = 0;
 
         // Constants determining action attributes:
         
         // Side kick constants:
-        this.K_KICK_VEL = 400; // Base velocity from kicking an object
+        this.K_KICK_VEL = 200; // Base velocity from kicking an object
+        this.K_KICK_V_STANDING = 300; // Minimum rebound velocity
         this.K_SIDEKICK_Y = -100; // Height gained from side-kicking
         this.K_SIDEKICK_W = 40;  // Width of hitbox
-        this.K_SIDEKICK_H = 48;  // Height of hitbox
+        this.K_SIDEKICK_H = 36;  // Height of hitbox
         this.kickXOffset = 30;  // X offset for side kick
         this.kickYOffset = 0;  // Y offset for side kick
 
@@ -76,20 +85,23 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Dropkick constants:
         this.D_MINSPEED = this.P_XVEL_SOFTMAX * 1.1;    // Minimum speed required to perform a dropkick
-        this.D_DROPKICK_XVEL = 200; // Horizontal velocity from sliding
-        this.D_DROPKICK_YVEL = -400; // Vertical velocity from sliding
+        this.D_DROPKICK_XVEL = 80; // Horizontal velocity from dropkick
+        this.D_DROPKICK_YVEL = -400; // Vertical velocity
         this.D_DROPKICK_W = 40;
-        this.D_DROPKICK_H = 30;
+        this.D_DROPKICK_H = 36;
+        this.D_DROPKICK_Y = -400; // Vertical boost after rebound
+        this.D_SLOWDOWN = 2.0;  // Slowdown after hitting something with a dropkick
         this.D_dropXOffset = 30;
         this.D_dropYOffset = 0;
 
         // Flip constants:
-        this.F_FLIP_W = 24;
+        this.F_FLIP_VEL = 400;
+        this.F_FLIP_W = 30;
         this.F_FLIP_H = 24;
         this.F_FLIP_RADIUS = 36; // Radius of arc representing the flip's trajectory
-        this.F_FLIP_START = 140; // Start and end angles of arc
-        this.F_FLIP_END = 340;
-        this.F_FLIP_SPEED = 0.022;  // Speed of hitbox traveling along the flip path
+        this.F_FLIP_FRONT = 170; // Start and end angles of arc
+        this.F_FLIP_BACK = 340;
+        this.F_FLIP_SPEED = 0.03;  // Speed of hitbox traveling along the flip path
 
         // Laser constants:
         this.L_LASER_WINDUP = 125;  // Ticks before laser move happens
@@ -130,11 +142,17 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.dropKickBounce = false;
         this.dropKickDelay = 0; // Next two variables are used to delay the 'on ground' check for the drop kick
         this.dropKickDelayTicks = 5 * this.INTERVAL;
+        this.maxSlowTicks = 15 * this.INTERVAL;
+        this.ticksToSlowEnd = 0;
+        this.slowTime = false;
 
         this.maxFlipTicks = 30 * this.INTERVAL;
         this.ticksToFlipEnd = 0;
         this.canFlip = false;
         this.flipping = false;
+        this.flipReboundVec = new Phaser.Math.Vector2(0, 0);
+        this.flipAngle = 0;
+        this.flipLastTan = new Phaser.Math.Vector2(0, 0);
 
         this.maxSlideTicks = 30 * this.INTERVAL;
         this.ticksToSlideEnd = 0;
@@ -216,7 +234,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
         // Begin modified code from https://labs.phaser.io/edit.html?src=src/paths/circle%20path.js
         // this.flipPath = new Phaser.Curves.Path();
-        this.flipPath = new Phaser.Curves.Ellipse(-10, -10, this.F_FLIP_RADIUS, this.F_FLIP_RADIUS, this.F_FLIP_START, this.F_FLIP_END);
+        this.flipPath = new Phaser.Curves.Ellipse(-10, -10, this.F_FLIP_RADIUS, this.F_FLIP_RADIUS, this.F_FLIP_FRONT, this.F_FLIP_BACK);
+        // this.flipPath.setRotation(180);
         this.scene.add.existing(this.flipPath);
         // End modified code from https://labs.phaser.io/edit.html?src=src/paths/circle%20path.js
         // Begin modified code from https://labs.phaser.io/edit.html?src=src/physics/arcade/body%20on%20a%20path.js
@@ -245,16 +264,24 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // This overlap can pass individual tiles into the rebound method, so we can check if any
         // overlapped tiles have their canCollide value set to true.
         this.solidCollider = this.scene.physics.add.collider(this, solids);
-        this.semiCollider = this.scene.physics.add.collider(this, semisolids);
+        //this.semiCollider = this.scene.physics.add.collider(this, semisolids);
+
+        // Colliders for each move. These are actually overlaps set to only detect overlap with solid terrain.
         this.kickCollider = this.scene.physics.add.overlap(this.sideKickBox, solids, null, this.kickRebound, this);
         this.dropKickCollider = this.scene.physics.add.overlap(this.dropKickBox, solids, null, this.dropKickRebound, this);
+        this.flipCollider = this.scene.physics.add.overlap(this.flipBox, solids, null, this.flipRebound, this);
 
         this.alignRan = 0;
         this.reboundRan = 0;
         this.tile = solids.getTileAt(0,0, true);
+        this.maxY = 0;
     }
 
-    update(time) {
+    update(time, delta) {
+
+        /** Timer */
+        // Only update if not paused
+        this.ticks += delta;
 
         /** Actions */
         
@@ -262,12 +289,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.cursors.left.isDown && ((!this.crouching && !this.sliding) || !this.body.onFloor()))
         {
             this.moveX(-this.P_XACCEL);
-            this.anims.play('left', true);
+            
         }
         else if (this.cursors.right.isDown && ((!this.crouching && !this.sliding) || !this.body.onFloor()))
         {
             this.moveX(this.P_XACCEL);
-            this.anims.play('right', true);
+            
         }
         // Else: no movement. Set acceleration to 0 and decrease speed with friction/drag.
         else
@@ -276,11 +303,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.anims.play('turn');
         }
 
-        if (this.cursors.left.isDown && (!this.sliding)) {
+        /** Change direction on left/right press if not performing a move */
+        if (this.cursors.left.isDown 
+            && !(this.sliding || this.sideKicking || this.dropKicking || this.flipping)) {
             this.xFacing = this.xDirection.LEFT;
+            this.anims.play('left', true);
         }
-        else if (this.cursors.right.isDown && (!this.sliding)) {
+        else if (this.cursors.right.isDown 
+            && !(this.sliding || this.sideKicking || this.dropKicking || this.flipping)) {
             this.xFacing = this.xDirection.RIGHT;
+            this.anims.play('right', true);
         }
 
         /** Crouch */
@@ -303,20 +335,21 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.dropKickBounce = false;
             // this.canSlide = false;
             this.setVelocityY(this.P_JUMP);
-            this.ticksToJumpEnd = time + this.maxJumpTicks;
+            this.ticksToJumpEnd = this.ticks + this.maxJumpTicks;
         }
         // Jump height increases with duration of button press
-        if (this.cursors.jump.isDown && this.isJumping && time < this.ticksToJumpEnd)
+        if (this.cursors.jump.isDown && this.isJumping && this.ticks < this.ticksToJumpEnd)
         {
             this.setAccelerationY(this.P_JUMP_ACCEL);
         }
 
         /** End jump after releasing button or holding the button long enough */
-        if (this.cursors.jump.isUp || !this.isJumping || time >= this.ticksToJumpEnd)
+        if (this.cursors.jump.isUp || !this.isJumping || this.ticks >= this.ticksToJumpEnd)
         {
             this.isJumping = false;
             if (this.body.velocity.y < 0) {
                 this.setAccelerationY(this.P_JUMP_BRAKE);
+                this.maxY = this.body.position.y;
             }
             else {
                 // Player is still affected by gravity
@@ -325,7 +358,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         /** Do a slide with attack on ground. You can still jump even if airborne after doing this move! */
-        if (this.cursors.attack.isDown && ((this.cursors.down.isDown && !this.body.onFloor()) || (!this.cursors.down.isDown && this.body.onFloor()))
+        if (this.cursors.attack.isDown 
+            && ((this.cursors.down.isDown && !this.body.onFloor()) 
+                || (!(this.canDropKick && this.cursors.down.isDown) && this.body.onFloor()))
             && this.canSlide && !this.sliding && this.xFacing !== this.xDirection.NONE && !this.dropKicking) 
         {
             this.sliding = true;
@@ -341,9 +376,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.body.setVelocityY(this.S_SLIDE_YVEL);
 
             this.slideBox.setActive(true);
-            this.ticksToSlideEnd = time + this.maxSlideTicks;
+            this.ticksToSlideEnd = this.ticks + this.maxSlideTicks;
         }
-        if (this.sliding && time < this.ticksToSlideEnd)
+        if (this.sliding && this.ticks < this.ticksToSlideEnd)
         {
             this.crouching = true;
             this.alignWithPlayer(this.slideBox, this.S_slideXOffset, this.S_slideYOffset);
@@ -373,9 +408,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
             // sideKickBox.enableBody(false, 0, 0, true, true);
             this.sideKickBox.setActive(true);
-            this.ticksToKickEnd = time + this.maxKickTicks;
+            this.ticksToKickEnd = this.ticks + this.maxKickTicks;
         }
-        if (this.sideKicking && time < this.ticksToKickEnd)
+        if (this.sideKicking && this.ticks < this.ticksToKickEnd)
         {
             this.alignWithPlayer(this.sideKickBox, this.kickXOffset, this.kickYOffset);
             // this.anims.play('sidekick');
@@ -433,20 +468,23 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.body.setVelocityY(this.D_DROPKICK_YVEL);
 
             this.dropKickBox.setActive(true);
-            this.ticksToDropKickEnd = time + this.maxDropTicks;
-            this.dropKickDelay = time + this.dropKickDelayTicks;
+            this.ticksToDropKickEnd = this.ticks + this.maxDropTicks;
+            this.dropKickDelay = this.ticks + this.dropKickDelayTicks;
         }
-        if (this.dropKicking && time < this.ticksToDropKickEnd)
+        if (this.dropKicking && this.ticks < this.ticksToDropKickEnd)
         {
             this.canKick = false;
             this.alignWithPlayer(this.dropKickBox, this.D_dropXOffset, this.D_dropYOffset);
             // this.anims.play('dropkick');
-            if (this.body.onFloor() && time > this.dropKickDelay)
+            if (this.body.onFloor() && this.ticks > this.dropKickDelay)
             {
                 this.dropKicking = false;
                 this.dropKickBox.setActive(false);
 
             }
+        }
+        if (this.ticks >= this.ticksToDropKickEnd) {
+            this.dropKicking = false;
         }
         
         /** Do a flip by holding up while attempting a side kick */
@@ -496,7 +534,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Player is slowed down more on the ground
         if (this.body.onFloor()){
-            this.setDragX(this.P_DRAG);
+            if (this.canDropKick && !this.sliding) {
+                this.setDragX(this.P_DRAG_FAST);
+            }
+            else {
+                this.setDragX(this.P_DRAG);
+            }
             this.canKick = true;
             this.canJump = true;
             this.canSlide = true;
@@ -545,6 +588,21 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.body.velocity.x < -this.P_XVEL_HARDMAX) {
             this.setVelocityX(-this.P_XVEL_HARDMAX);
         }
+
+        // Handle jump during slowdown
+        if (this.slowTime) {
+            if (this.cursors.jump.isDown && this.ticks <= this.ticksToSlowEnd) {
+                // Resume time and jump
+                this.scene.physics.world.timeScale = 1.0;
+                this.slowTime = false;
+            }
+            else if (this.ticks > this.ticksToSlowEnd || this.body.onFloor()) {
+                // Resume time
+                this.scene.physics.world.timeScale = 1.0;
+                this.slowTime = false;
+                this.canJump = false;
+            }
+        }
     }
 
     /** Helper methods */
@@ -562,9 +620,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
          if ((-this.P_XVEL_SOFTMAX <= this.body.velocity.x && ax < 0) 
              || (this.body.velocity.x <= this.P_XVEL_SOFTMAX && ax > 0)) {
              this.setAccelerationX(ax);
+             this.setDragX(this.P_DRAG);
          }
          else {
              this.setAccelerationX(0);
+             this.setDragX(this.P_DRAG_FAST);
          }
      } // END move
  
@@ -596,20 +656,37 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
-     * Rotates the flip hitbox around the flip path.
+     * Rotates the flip hitbox around the flip path, and
+     * calculates the angle of the flip rebound vector.
+     * This updates the hitbox's position and angle as the player is updated.
      */
     flipRotation() {
-    // TODO: Save last position of flipBox to calculate direction of velocity vector for use in special rebound method
+        
         if (this.kickDirection == this.xDirection.RIGHT) {
             // Counter-clockwise motion
+            this.flipPath.setStartAngle(-(this.F_FLIP_BACK - 180));
+            this.flipPath.setEndAngle(-(this.F_FLIP_FRONT - 180));
+            
+            // Get the next point and tangent
             this.flipPath.getPoint(1 - this.pathIndex, this.pathVector);
+            this.flipLastTan = this.flipPath.getTangent(1 - this.pathIndex, this.flipLastTan);
         }
         else if (this.kickDirection == this.xDirection.LEFT) {
             // Clockwise motion
+            this.flipPath.setStartAngle(this.F_FLIP_FRONT);
+            this.flipPath.setEndAngle(this.F_FLIP_BACK);
+
+             // Get the next point and tangent
             this.flipPath.getPoint(this.pathIndex, this.pathVector);
+            this.flipLastTan = this.flipPath.getTangent(this.pathIndex, this.flipLastTan);
         }
 
+        // Calculate the angle in radians from the unit tangent vector acquired from .getTangent method
+        this.flipAngle = Math.atan(this.flipLastTan.y / this.flipLastTan.x);
+        
         this.flipBox.setPosition(this.pathVector.x, this.pathVector.y);
+        
+        // Increment the path index until the hitbox reaches the end of the arc
         this.pathIndex = Math.min(this.pathIndex + this.F_FLIP_SPEED, 1);
         if (this.pathIndex >= 1) {
             this.flipping = false;
@@ -647,7 +724,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 if (this.body.velocity.x < 0) {
                     pvx = -pvx;
                 }
-                this.setVelocityX(pvx + this.K_KICK_VEL);
+                this.setVelocityX(Math.max(this.K_KICK_V_STANDING, pvx + this.K_KICK_VEL));
                 this.lastKick_V = pvx + this.K_KICK_VEL;
                 this.xFacing = this.xDirection.RIGHT;
                 // temporarily suppress left movement?
@@ -660,7 +737,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 if (this.body.velocity.x > 0) {
                     pvx = -pvx;
                 }
-                this.setVelocityX(pvx - this.K_KICK_VEL);
+                this.setVelocityX(Math.min(-this.K_KICK_V_STANDING, pvx - this.K_KICK_VEL));
                 this.lastKick_V = pvx - this.K_KICK_VEL;
                 this.xFacing = this.xDirection.LEFT;
                 // temporarily suppress right movement?
@@ -677,15 +754,63 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         return true;
     }
 
-    
+    /**
+     * Special rebound function for dropkicking into an object.
+     * 
+     * @param hitbox the hitbox from a player action
+     * @param tile the tile overlapped by the hitbox
+     */
     dropKickRebound(hitbox, tile) {
         
         if (this.dropKicking && !this.sideKicking && this.verifyRebound(hitbox, tile)) {
-            this.setVelocityY(this.P_JUMP_ACCEL);
+            this.dropKickSlowdown();
+            this.setVelocity(-this.body.velocity.x * 0.5, this.D_DROPKICK_Y);
             this.canKick = true;
+            this.canSlide = false;
             this.dropKickBounce = true;
             this.canJump = true;
             this.dropKicking = false;
+            this.reboundRan++;
+        }
+
+        return true;
+    }
+
+    dropKickSlowdown() {
+        // Slow time
+        this.scene.physics.world.timeScale = this.D_SLOWDOWN;
+        this.ticksToSlowEnd = this.ticks + this.maxSlowTicks;
+        this.slowTime = true;
+    }
+
+    /**
+     * Special rebound function for flipping into an object.
+     * 
+     * @param hitbox the hitbox from a player action
+     * @param tile the tile overlapped by the hitbox
+     */
+     flipRebound(hitbox, tile) {
+        
+        if (this.flipping && tile.properties.solid && !tile.properties.semisolid) {
+            // Set to default kick vector at angle of 0
+            this.flipReboundVec.set(this.F_FLIP_VEL, 0);
+            // Rotate by the angle
+            this.flipReboundVec.rotate(this.flipAngle);
+            // If kicking to the left, invert the x component to rebound in the opposite direction
+            if (this.kickDirection === this.xDirection.RIGHT) {
+                if (this.flipReboundVec.x < 0)
+                    this.flipReboundVec.x *= -1;
+            }
+            else if (this.kickDirection === this.xDirection.LEFT) {
+                if (this.flipReboundVec.x > 0)
+                    this.flipReboundVec.x *= -1;
+            }
+            if (this.flipReboundVec.y < 0) {
+                this.flipReboundVec.y *= -1;
+            }
+
+            this.setVelocity(this.flipReboundVec.x, this.flipReboundVec.y);
+            this.flipping = false;
             this.reboundRan++;
         }
 

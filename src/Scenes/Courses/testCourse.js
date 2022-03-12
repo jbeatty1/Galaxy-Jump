@@ -53,7 +53,6 @@ var propertiesText;
 // var this.blockTiles;
 // var this.semiTiles;
 
-
 export default class testCourse extends Phaser.Scene {
     constructor () {
         super('testCourse');
@@ -72,16 +71,20 @@ export default class testCourse extends Phaser.Scene {
         // this.load.spritesheet('dude', 'dude2_hat.png', { frameWidth: 32, frameHeight: 48 });
 
         // To make a tile this.map, load the image, then load the .json file created in Tiled
-        this.load.image('tiles', 'assets/tilesets/ground_1x1.png');
+        // this.load.image('tiles', 'assets/tilesets/ground_1x1.png');
         this.load.image('semisolid', 'assets/tilesets/platformPack_tilesheet.png');
-        this.load.tilemapTiledJSON('this.map', 'assets/courses/coursetest.json');
+        this.load.image('tiles', 'assets/tilesets/fantasy-tiles_32x32.png');
+        this.load.tilemapTiledJSON('this.map', 'assets/courses/course1.json');
     }
 
     
     
     create ()
     {
-        //this.add.image(0, 0, 'sky').setOrigin(0, 0).setScale(3);
+        this.WORLD_WIDTH = 400 * 32;
+        this.WORLD_HEIGHT = 45 * 32;
+
+        this.add.image(0, 0, 'sky').setOrigin(0, 0).setScale(3);
         this.map = this.make.tilemap({
             key: 'this.map',
         });
@@ -89,11 +92,11 @@ export default class testCourse extends Phaser.Scene {
         // Second argument is the key of the image used in the tileset.
 
         // Semisolid platforms can only be touched from above. Player can pass through them otherwise.
-        this.semiTiles = this.map.addTilesetImage('platformPack_tilesheet', 'semisolid');
-        this.semisolids = this.map.createLayer('semisolid', this.semiTiles, 0, 0);
+        // this.semiTiles = this.map.addTilesetImage('platformPack_tilesheet', 'semisolid');
+        // this.semisolids = this.map.createLayer('semisolid', this.semiTiles, 0, 0);
 
-        this.blockTiles = this.map.addTilesetImage('ground_1x1', 'tiles');
-        this.solids = this.map.createLayer('block', this.blockTiles, 0, 0);
+        this.terrainTiles = this.map.addTilesetImage('fantasy-tiles_32x32', 'tiles');
+        this.solids = this.map.createLayer('terrain', this.terrainTiles, 0, 0);
         
         // Different tiles can have different properties and collision rules edited through Tiled.
 
@@ -173,8 +176,8 @@ export default class testCourse extends Phaser.Scene {
         // timer = self.setInterval(function(){this.Tick()}, INTERVAL);
 
         // Camera
-        this.cameras.main.setBounds(0, 0, 1800, 1000);
-        this.physics.world.setBounds(0, 0, 1800, 1000);
+        this.cameras.main.setBounds(0, 0, this.WORLD_WIDTH, this.WORLD_HEIGHT);
+        this.physics.world.setBounds(0, 0, this.WORLD_WIDTH, this.WORLD_HEIGHT);
 
         this.cameras.main.startFollow(this.player, false, 1, 1); // Setting 2nd parameter to 'true' will make the camera round its position value to integers
         this.cameras.main.setDeadzone(100, 50);
@@ -189,6 +192,14 @@ export default class testCourse extends Phaser.Scene {
         this.input.keyboard.on('keydown-Q', () => {
             this.scene.start('testCourse2');
         });
+
+        this.input.keyboard.on('keydown-ENTER', () => {
+            if (!this.physics.world.isPaused)
+                this.physics.world.pause();
+            else 
+                this.physics.world.resume();
+        });
+        this.tickCount = 0;
     }
 
 
@@ -201,14 +212,14 @@ export default class testCourse extends Phaser.Scene {
     
     update (time, delta)
     {
-        // tickCount++;
         // Timer
         // if (time % INTERVAL == 0) {
         //     tickCount++;
         // }
 
         // Controls and movement. Could be remade into a switch statement.
-        this.player.update(time);
+        if (!this.physics.world.isPaused)
+            this.player.update(time, delta);
 
         // DEBUG: Record maximum y velocity after each fall
         // if (!this.player.body.onFloor()) {
@@ -273,7 +284,12 @@ export default class testCourse extends Phaser.Scene {
             + '\n last tile: ' + this.player.tile.x
             + '\n kick: ' + this.player.sideKickBox.z + ' ' + this.player.dropKickBox.z
             + '\n list: ' + this.textures.getTextureKeys()
-            + '\n key: ' + this.player.textureKey
+            + '\n tangent: ' + this.player.flipLastTan.x + ', ' + this.player.flipLastTan.y
+            + '\n drag: ' + this.player.body.drag.x 
+            + '\n angle: ' + this.player.flipPath.startAngle + ', ' + this.player.flipPath.endAngle
+            + '\n ticks: ' + this.player.ticks + ' time: ' + time
+            + '\n maxY: ' + this.player.maxY
+            + '\n isJumping: ' + this.player.isJumping + this.player.cursors.jump.isDown
             + '\nArrow keys to move left and right. '
             + 'Press Z to jump. '
             + 'Press X to do a side kick. '
