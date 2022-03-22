@@ -1,5 +1,5 @@
 import 'phaser';
-import {checkWallManual} from './Objects/Enemy';
+
 /**
  * Class modeling the player character with all movement abilities.
  * This player can be added to any scene by creating a new Player object.
@@ -11,11 +11,8 @@ import {checkWallManual} from './Objects/Enemy';
  *      slow motion after dropkicking a wall. If you jump or wait too long, 
  *      the game speed returns to normal.
  * - Made it so you won't register two moves right after each other if you hold jump or attack.
- * - Added laser move
- * - Improved flip physics
- * - Added damage and attacking system
  * @author Tony Imbesi
- * @version 3/21/2022
+ * @version 3/12/2022
  */
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     /**
@@ -31,7 +28,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         super(config.scene, config.x, config.y, "dude");
         this.scene = config.scene;
         this.solids = solids;
-        this.map = this.solids.tilemap;
         this.enemies = enemies;
         //this.semisolids = config.solids;
 
@@ -71,12 +67,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.P_BOUNCE = 0;
         this.P_DELAY = 150; // Delay in milliseconds before player can input another attack
 
-        
+        this.atkDelayEnd = 0;
 
         // Constants determining action attributes:
         
         // Side kick constants:
-        this.K_KICK_VEL = 230; // Base velocity from kicking an object
+        this.K_KICK_VEL = 250; // Base velocity from kicking an object
         this.K_KICK_V_STANDING = 300; // Minimum rebound velocity
         this.K_SIDEKICK_Y = -100; // Height gained from side-kicking
         this.K_SIDEKICK_W = 40;  // Width of hitbox
@@ -104,26 +100,17 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.D_dropYOffset = 0;
 
         // Flip constants:
-        this.F_FLIP_VEL = 500;
+        this.F_FLIP_VEL = 400;
         this.F_FLIP_W = 30;
         this.F_FLIP_H = 30;
         this.F_FLIP_RADIUS = 36; // Radius of arc representing the flip's trajectory
         this.F_FLIP_FRONT = 170; // Start and end angles of arc
         this.F_FLIP_BACK = 340;
-        this.F_FLIP_SPEED = 0.04;  // Speed of hitbox traveling along the flip path
+        this.F_FLIP_SPEED = 0.03;  // Speed of hitbox traveling along the flip path
 
         // Laser constants:
-        this.L_LASER_WINDUP = 10 * this.INTERVAL; // Ticks before laser move happens
-        this.L_LASER_MAX = 50 * this.INTERVAL; // Max number of ticks you can sustain the laser for
-        
-        this.L_LASERACCEL = -2300;   // Vertical boost from lasering
-        this.L_YVEL_MAX = -500;
-        this.L_LASERACCEL_UP = -500; // Laser acceleration when going upwards very fast
-        this.L_LASERACCEL_DOWN = -4000; // Laser acceleration when moving down
-        this.L_WIDTH = 20;
-        this.L_HEIGHT = 2;
-        this.L_INCREMENT = 4;
-        this.ticksToLaser = 0;
+        this.L_LASER_WINDUP = 125;  // Ticks before laser move happens
+        this.L_LASERACCEL = -800;   // Vertical boost from lasering
 
         // Health variables:
         this.maxHP = 100; // Max health
@@ -135,11 +122,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
 
         this.xDirection = {
-            LEFT: 0,
-            RIGHT: 1,
-            UP: 2,
-            DOWN: 3,
-            NONE: 4
+            NONE: 0,
+            LEFT: 1,
+            RIGHT: 2,
         };
 
         this.pHitboxes = null;
@@ -157,11 +142,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.crouching = false;
 
         this.canAttack = true;
-        this.attackDelay = 25 * this.INTERVAL;
-        this.atkDelayEnd = 0;
-        this.reboundLanded = false;
 
-        this.maxKickTicks = 9 * this.INTERVAL;
+        this.maxKickTicks = 6 * this.INTERVAL;
         this.ticksToKickEnd = 0;
         this.sideKicking = false;
         this.canKick = true;
@@ -192,18 +174,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.canSlide = true;
         this.sliding = true;
 
-        this.laser = null
         this.laserPrep = false;
         this.lasering = false;
         this.canLaser = false;
         
         this.xFacing = 0;
         this.kickDirection = 0;
-
-        // Items found:
-        this.foundLaser = false;
-        this.foundDoubleJump = false;
-        this.foundSpeedUp = false;
 
         
 
@@ -306,21 +282,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // overlapped tiles have their canCollide value set to true.
         this.solidCollider = this.scene.physics.add.collider(this, solids);
         //this.semiCollider = this.scene.physics.add.collider(this, semisolids);
-
-        // These will similarly check the player against every tile in the 'spikes' layer and every enemy's physics body.
         this.spikeCollider = this.scene.physics.add.collider(this, this.scene.spikes, this.spikeContact, null, this);
         this.enemyCollider = this.scene.physics.add.overlap(this, this.enemies, this.enemyContact, null, this);
 
         // Colliders for each move. These are actually overlaps set to only detect overlap with solid terrain.
-        // Extra note: Order matters. Each collision will be checked in order of addition, 
-        // and the results of earlier colliders may affect the results of later colliders.
-        // attackCollider comes first because later colliders disable attack hitboxes
-        this.attackCollider = this.scene.physics.add.overlap(this.pHitboxes, this.enemies, this.attack, null, this);
-
         this.kickCollider = this.scene.physics.add.overlap(this.sideKickBox, solids, null, this.kickRebound, this);
         this.dropKickCollider = this.scene.physics.add.overlap(this.dropKickBox, solids, null, this.dropKickRebound, this);
         this.flipCollider = this.scene.physics.add.overlap(this.flipBox, solids, null, this.flipRebound, this);
-
+        this.attackCollider = this.scene.physics.add.overlap(this.pHitboxes, this.enemies, this.attack, null, this);
         this.softCollider = this.scene.physics.add.overlap(this.pHitboxes, this.solids, this.breakSoft, null, this);
         this.hardCollider = this.scene.physics.add.overlap(this.dropKickBox, this.solids, this.breakHard, null, this);
 
@@ -407,7 +376,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.setAccelerationY(this.P_JUMP_BRAKE);
                 this.maxY = this.body.position.y;
             }
-            else if (!this.lasering) {
+            else {
                 // Player is still affected by gravity
                 this.setAccelerationY(0);
             }
@@ -468,7 +437,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             // sideKickBox.enableBody(false, 0, 0, true, true);
             this.sideKickBox.setActive(true);
             this.ticksToKickEnd = this.ticks + this.maxKickTicks;
-            this.atkDelayEnd = this.ticks + this.attackDelay;
         }
         if (this.sideKicking && this.ticks < this.ticksToKickEnd)
         {
@@ -489,54 +457,24 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // }
 
         /** Laser move: Down + hold attack in the air */
-        if (this.cursors.down.isDown
-            && !this.laserPrep
-            && !this.body.onFloor() && !this.sideKicking && !this.sliding && this.canLaser)
-        {
-            console.log("Laser init working");
-            this.laserPrep = true;
-            this.ticksToLaser = this.ticks + this.L_LASER_WINDUP;
-            // Attack duration timer starts at the same time as the windup, so add windup time
-            this.ticksToLaserEnd = this.ticksToLaser + this.L_LASER_MAX;
-        }
+        // if (this.cursors.down.isDown && this.cursors.attack.isDown
+        //     && !this.body.onFloor() && !this.sideKicking && !this.sliding && this.canLaser)
+        // {
+        //     this.laserPrep = true;
+        // }
 
-        if (this.laserPrep) {
-            // If player is holding down, in air, and not doing anything else...
-            if (this.cursors.down.isDown
-                && !this.body.onFloor() 
-                && (!this.sideKicking && !this.sliding && !this.dropKicking && !this.flipping)
-                && this.ticks < this.ticksToLaserEnd)
-            {
-                // console.log("Laser prep working");
-                // And if down is held for long enough...
-                if (this.ticks >= this.ticksToLaser) {
-                    // Fire the laser downwards
-                    if (this.body.velocity.y > 0) {
-                        this.setAccelerationY(this.L_LASERACCEL_DOWN);
-                    }
-                    else if (this.body.velocity.y > this.L_YVEL_MAX) {
-                        this.setAccelerationY(this.L_LASERACCEL);
-                    }
-                    else {
-                        this.setAccelerationY(this.L_LASERACCEL_UP);
-                    }
-                    
-                    // console.log(this.body.acceleration.y);
-                    this.laserSetup();
-                    this.canJump = false;
-                    this.lasering = true;
-                    this.drawLaser();
-                }
-            }
-            else {
-                this.lasering = false;
-                this.laserPrep = false;
-                this.canLaser = false;
-                if (this.laser != null) {
-                    this.laser.destroy();
-                }
-            }
-        }
+        // if (this.laserPrep) {
+        //     if ((this.cursors.attack.getDuration() >= this.L_LASER_WINDUP)
+        //         && !this.body.onFloor() && !this.sideKicking && !this.sliding)
+        //     {
+        //         this.setAccelerationY(this.L_LASERACCEL);
+        //         this.canJump = false;
+        //     }
+        //     else {
+        //         this.laserPrep = false;
+        //         this.canLaser = false;
+        //     }
+        // }
 
         /** Drop kick: Down + attack on the ground with some speed built up */
         if (this.cursors.down.isDown && this.cursors.pressed(this.cursors.attack) && this.body.onFloor()
@@ -590,7 +528,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.canSlide = false;
 
             this.flipBox.setActive(true);
-            this.atkDelayEnd = this.ticks + this.attackDelay;
         }
         if (this.flipping)
         {
@@ -644,7 +581,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.canKick = true;
             this.canJump = true;
             this.canSlide = true;
-            this.canLaser = true;
             this.isJumping = false;
             this.dropKickBounce = false;
         }
@@ -707,9 +643,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         /** Handle attack delay */
-        if (this.cursors.attack.isUp && (this.body.onFloor() || this.reboundLanded || this.ticks >= this.atkDelayEnd)) {
+        if (this.cursors.attack.isUp) {
             this.canAttack = true;
-            this.reboundLanded = false;
         }
 
         /** Handle invincibility timer after taking damage */
@@ -784,7 +719,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * This updates the hitbox's position and angle as the player is updated.
      */
     flipRotation() {
-        this.flipReady = false;
+        
         if (this.kickDirection == this.xDirection.RIGHT) {
             // Counter-clockwise motion
             this.flipPath.setStartAngle(-(this.F_FLIP_BACK - 180));
@@ -819,29 +754,21 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Rotate flip vector
 
         // Set to default kick vector at angle of 0
-        this.flipReboundVec.set(0, -this.F_FLIP_VEL);
-        // Rotate by the angle modified by an offset
-        
-        //var angleOffset = 0;
         this.flipReboundVec.set(this.F_FLIP_VEL, 0);
         // Rotate by the angle
-        this.flipReboundVec = this.flipReboundVec.rotate(this.flipAngle);
-        // If kicking to the left, ensure you will always go to the left
+        this.flipReboundVec.rotate(this.flipAngle);
+        // If kicking to the left, invert the x component to rebound in the opposite direction
         if (this.kickDirection === this.xDirection.RIGHT) {
-            if (this.flipReboundVec.x < 0) {
+            if (this.flipReboundVec.x < 0)
                 this.flipReboundVec.x *= -1;
-            }
         }
         else if (this.kickDirection === this.xDirection.LEFT) {
-            if (this.flipReboundVec.x > 0) {
+            if (this.flipReboundVec.x > 0)
                 this.flipReboundVec.x *= -1;
-            }
         }
         if (this.flipReboundVec.y < 0) {
             this.flipReboundVec.y *= -1;
         }
-        //this.flipAngle += angleOffset;
-        this.flipReady = true;
     }
  
     /**
@@ -897,8 +824,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.setVelocityY(Math.min(this.body.velocity.y, this.K_SIDEKICK_Y));
             //this.reboundRan++;
             this.sideKicking = false;
-            this.reboundLanded = true;
         }
+
         this.canKick = true;
         this.kickOK = false;
         return true;
@@ -920,9 +847,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.dropKickBounce = true;
             this.canJump = true;
             this.dropKicking = false;
-            this.reboundLanded = true;
             this.reboundRan++;
         }
+
         return true;
     }
 
@@ -940,39 +867,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * @param tile the tile overlapped by the hitbox
      */
      flipRebound(hitbox, tile) {
-        var vx = 0;
-        var vy = 0;
-        if (this.flipReady && this.flipping && tile.properties.solid && !tile.properties.semisolid && !tile.properties.soft) {
+        
+        if (this.flipping && tile.properties.solid && !tile.properties.semisolid && !tile.properties.soft) {
             // Flip vector calculated in flipRotation method
-            console.log('vx: ' + vx);
-
-            // Modify vx at earliest part of the flip
-            if (this.pathIndex <= 0.2) {
-                console.log("pathIndex X check working");
-                if (this.kickDirection == this.xDirection.RIGHT)
-                    vx = -this.flipReboundVec.x - this.F_FLIP_VEL;
-                else if (this.kickDirection == this.xDirection.LEFT)
-                    vx = this.flipReboundVec.x + this.F_FLIP_VEL;
-            }
-            else {
-                vx = this.flipReboundVec.x;
-            }
-
-            // Modify vy at latest part of the flip
-            if (this.pathIndex >= 0.7) {
-                console.log("pathIndex Y check working");
-                vy = this.flipReboundVec.y - this.F_FLIP_VEL;
-            }
-            else {
-                vy = this.flipReboundVec.y;
-            }
-            this.setVelocity(vx, vy);
+            this.setVelocity(this.flipReboundVec.x, this.flipReboundVec.y);
             this.flipping = false;
-            this.reboundLanded = true;
             this.reboundRan++;
-            console.log('pathIndex: ' + this.pathIndex);
-            console.log('vx: ' + vx);
-            console.log('vy: ' + vy);
         }
 
         return true;
@@ -987,18 +887,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * @returns true if the hitbox is against a solid wall or corner, false otherwise
      */
     verifyRebound(hitbox, tile) {
-        var frontTile = null;
-        var tileHeight = Math.min(tile.pixelY, this.body.y + (this.body.height * 1.5));
-
         if (this.kickDirection == this.xDirection.LEFT && tile.faceRight && !tile.properties.semisolid && tile.properties.solid && !tile.properties.soft) {
             this.staticEdge = tile.pixelX + tile.width;
             this.kickEdge = hitbox.body.position.x + hitbox.body.width;
-            frontTile = this.map.getTileAtWorldXY(tile.pixelX + 32, tileHeight);
-            if (frontTile != null) {
-                console.log(frontTile.x + ',' + frontTile.y);
-            }
-            if (this.kickEdge > this.staticEdge 
-                && ((frontTile == null || !frontTile.properties.semisolid) || this.body.y + this.body.height > tile.pixelY)) {
+            if (this.kickEdge > this.staticEdge) {
                 return true;
                 // reboundRan++;
             }
@@ -1006,48 +898,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.kickDirection == this.xDirection.RIGHT && tile.faceLeft && !tile.properties.semisolid && tile.properties.solid && !tile.properties.soft) {
             this.staticEdge = tile.pixelX;
             this.kickEdge = hitbox.body.position.x;
-            frontTile = this.map.getTileAtWorldXY(tile.pixelX - 32, tileHeight);
-            if (frontTile != null) {
-                console.log(frontTile.x + ',' + frontTile.y);
-            }
-            if (this.kickEdge < this.staticEdge 
-                && ((frontTile == null || !frontTile.properties.semisolid) || this.body.y + this.body.height > tile.pixelY)) {
+            if (this.kickEdge < this.staticEdge) {
                 return true;
                 // reboundRan++;
             }
         }
         return false;
-    }
-
-    laserSetup() {
-        if (!this.lasering) {
-            var laserX = this.getBottomCenter().x;
-            var laserY = this.getBottomCenter().y;
-            this.laser = this.scene.add.rectangle(laserX, laserY, this.L_WIDTH, this.L_HEIGHT);
-            //var laser = new Phaser.GameObjects.Rectangle(this.scene, 1, 2, 3, 4);
-            this.pHitboxes.add(this.laser);
-            this.laser.setOrigin(0, 0);
-            
-            this.laser.body.setAllowGravity(false);
-        }
-    }
-
-    drawLaser() {
-        var i = 0;
-        // var laserX = this.getBottomCenter().x;
-        // var laserY = this.getBottomCenter().y;
-        // Extend down
-        this.alignWithPlayer(this.laser, 0, this.body.height / 2);
-
-        while (i < 1000 && !checkWallManual(this.xDirection.DOWN, this.laser.body.position.x, this.laser.body.width, this.laser.y, this.laser.body.height, this.map)) {
-            this.laser.body.setSize(this.laser.body.width, this.laser.body.height + this.L_INCREMENT);
-            // this.laser.y += 4;
-            // this.laserMask.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
-
-            // this.laserMask.x -= this.L_INCREMENT / 2;
-            //console.log(this.laser.body.position.x);
-            i++;
-        }
     }
 
     /**
@@ -1098,7 +954,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             vy = -this.flipReboundVec.y;
             hit = true;
         }
-        if (hit && enemy.recoilVulnerable) {
+        if (hit) {
             enemy.hit(vx, vy * 2);
             console.log(vx);
         }
@@ -1215,11 +1071,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     hitEnemyOnTile(tile) {
         this.enemies.getChildren().forEach(e => {
             if (e.alive && e.body.enable) { 
-                if (this.solids.getTileAtWorldXY(e.x, e.y + e.body.height + 1) === tile
-                    || this.solids.getTileAtWorldXY(e.x - 1, e.y) === tile
-                    || this.solids.getTileAtWorldXY(e.x + e.body.width + 1, e.y) === tile) {
-                    e.recoilVulnerable = true;
-                    e.body.setAllowGravity(true);
+                if (this.solids.getTileAtWorldXY(e.x, e.y + e.body.height + 1) === tile) {
                     e.hit(Phaser.Math.Between(-150, 150), this.S_SLIDE_YVEL);
                     console.log("Enemy clause worked");
                 }
@@ -1244,7 +1096,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.dropKickBounce = false;
     }
 
-    // grounded() {
-    //     return (this.body.onFloor() || this.body.touching.down);
-    // }
+    grounded() {
+        return (this.body.onFloor() || this.body.touching.down);
+    }
 }

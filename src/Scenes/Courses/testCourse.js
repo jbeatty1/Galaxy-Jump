@@ -1,9 +1,8 @@
 /**
 Test of Galaxy Jump prototype in an application setting.
-Some notes about this initial draft:
-- Every variable needs to be declared either outside of the export statement or inside the preload,
-create, or update methods.
-- Methods and callbacks declared inside the export statement must be referred to with the this reference.
+This time, we will try adding a simple course element to the world.
+When everything is sorted out, the easiest option might be to just copy the same .js file multiple times
+and have it load different tilemaps and tilesets to load different courses.
 
 For Galaxy Jump project.
 
@@ -12,7 +11,7 @@ If you want to see what everything else is, I would recommend looking at the oth
 
 This is made using the Phaser 3 game engine from https://github.com/photonstorm/phaser
 @author Tony Imbesi
-@version 3/1/2022
+@version 3/20/2022\
 
 License: https://opensource.org/licenses/MIT|MIT License
 Copyright 2020 Photon Storm Ltd.
@@ -29,6 +28,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 import 'phaser';
 import Player from "../../Player";
+import loadTiles from "../../loadTiles";
+import loadEntities from "../../loadEntities";
+import Enemy from "../../Objects/Enemy";
+import Walker from "../../Objects/Walker";
+import Walker2 from "../../Objects/Walker2";
+import LaserCannon from "../../Objects/LaserCannon";
+import Jumpster from "../../Objects/Jumpster";
+
 
 
 // Scene variables
@@ -38,6 +45,7 @@ var timer;
 // var this.solids; 
 // var this.semisolids;
 var other; // for iterating through tiles
+var otherSpike;
 
 // var pHitboxes;
 // var sideKickBox;
@@ -72,8 +80,7 @@ export default class testCourse extends Phaser.Scene {
 
         // To make a tile this.map, load the image, then load the .json file created in Tiled
         // this.load.image('tiles', 'assets/tilesets/ground_1x1.png');
-        this.load.image('semisolid', 'assets/tilesets/platformPack_tilesheet.png');
-        this.load.image('tiles', 'assets/tilesets/fantasy-tiles_32x32.png');
+        
         this.load.tilemapTiledJSON('this.map', 'assets/courses/course1.json');
     }
 
@@ -81,22 +88,34 @@ export default class testCourse extends Phaser.Scene {
     
     create ()
     {
+        this.physics.world.gravity.set(0, 700);
+        this.physics.world.setBoundsCollision(true, true, false, false);
         this.WORLD_WIDTH = 400 * 32;
         this.WORLD_HEIGHT = 45 * 32;
 
         this.add.image(0, 0, 'sky').setOrigin(0, 0).setScale(3);
+        this.solids;
+        // loadTiles(this);
+        // loadEntities(this);
         this.map = this.make.tilemap({
             key: 'this.map',
         });
-        // First argument of addTilesetImage is the name of the tileset as shown in Tiled.
-        // Second argument is the key of the image used in the tileset.
+        
 
         // Semisolid platforms can only be touched from above. Player can pass through them otherwise.
         // this.semiTiles = this.map.addTilesetImage('platformPack_tilesheet', 'semisolid');
         // this.semisolids = this.map.createLayer('semisolid', this.semiTiles, 0, 0);
 
+        // First argument of addTilesetImage is the name of the tileset as shown in Tiled.
+        // Second argument is the key of the image used in the tileset.
+        /** Add in spikes */
+        this.spikeTiles = this.map.addTilesetImage('objects', 'objects');
+        this.spikes = this.map.createLayer('spikes', this.spikeTiles, 0, 0);
+        this.spikes.setCollisionByProperty({ spikes: true }, true);
+
         this.terrainTiles = this.map.addTilesetImage('fantasy-tiles_32x32', 'tiles');
         this.solids = this.map.createLayer('terrain', this.terrainTiles, 0, 0);
+        
         
         // Different tiles can have different properties and collision rules edited through Tiled.
 
@@ -105,21 +124,28 @@ export default class testCourse extends Phaser.Scene {
         // Check to see if solid tiles have semisolid platforms to their right or left.
         // If so, give them collision on that side.
         this.solids.setCollisionByProperty({ solid: true }, true);
+        
+
         this.solids.forEachTile((tile) => {
             other = this.solids.getTileAt(tile.x + 1, tile.y);
-            if (tile.properties.solid && other != null && other.properties.semisolid) {
+            otherSpike = this.spikes.getTileAt(tile.x + 1, tile.y);
+            if (tile.properties.solid && (other != null && other.properties.semisolid) ) {
                 tile.faceRight = true;
                 //tile.properties.semiAdjacent = true;
             }
+            else if (tile.properties.solid && otherSpike != null && otherSpike.properties.spikes) {
+                tile.faceRight = false;
+            }
             other = this.solids.getTileAt(tile.x - 1, tile.y);
-            if (tile.properties.solid && other != null && other.properties.semisolid) {
+            otherSpike = this.spikes.getTileAt(tile.x - 1, tile.y);
+            if (tile.properties.solid && (other != null && other.properties.semisolid) ) {
                 tile.faceLeft = true;
                 //tile.properties.semiAdjacent = true;
             }
-            else {
-                //tile.properties.semiAdjacent = false;
+            else if (tile.properties.solid && otherSpike != null && otherSpike.properties.spikes) {
+                tile.faceLeft = false;
             }
-        })
+        });
 
         // Semisolid collision
         // Semisolid tiles will be checked under this.solids to make debugging easier
@@ -132,11 +158,22 @@ export default class testCourse extends Phaser.Scene {
                 tile.faceLeft = false;
                 tile.faceRight = false;
             }
-        })
+            // Check for solid tiles above or below semisolid tiles
+            other = this.solids.getTileAt(tile.x, tile.y - 1);
+            if (tile.properties.solid && (other != null && other.properties.semisolid)) {
+                tile.collideUp = true;
+                tile.faceTop = true;
+            }
+            other = this.solids.getTileAt(tile.x, tile.y + 1);
+            if (tile.properties.solid && !tile.properties.semisolid && (other != null && other.properties.semisolid)) {
+                tile.collideDown = true;
+                tile.faceBottom = true;
+            }
+        });
         
-
-        // debugGraphics = this.add.graphics();
-        // this.map.renderDebug(debugGraphics, {
+        /** Debug graphics */
+        // this.debugGraphics = this.add.graphics();
+        // this.map.renderDebug(this.debugGraphics, {
         //     tileColor: null, // Non-colliding tiles
         //     collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles
         //     faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
@@ -150,7 +187,53 @@ export default class testCourse extends Phaser.Scene {
         // platforms.create(1000, 1550, 'ground').setScale(1).refreshBody();
         // platforms.create(4900, 1650, 'ground').setScale(6).refreshBody();
 
-        // Make the preset player character
+        
+
+        
+        
+        // this.spikeData = '' + this.spikesArray[0].body.position.x + ' ' + this.spikesArray[1].body.position.x;
+        // this.spikeData = 'Too bad!';
+
+        // this.spikeLayer = this.map.getObjectLayer('spikes');
+
+        /** Add in the entities */
+        this.enemies = this.physics.add.group({
+            collideWorldBounds: false
+        });
+        // Remove default config information
+        this.enemies.defaults = {};
+
+        this.enemyArray = this.map.createFromObjects('enemies', [
+            { 
+                // Find the gid by checking the firstgid value in the tileset as shown in the course's .json file
+                // then counting from the top-left to the bottom-right.
+                // The firstgid of 'objects' in course1.json is 65
+                gid: 67,
+                classType: Walker
+            },
+            {
+                gid: 68,
+                classType: Walker2
+            },
+            {
+                gid: 71,
+                classType: LaserCannon
+            },
+            {
+                gid: 75,
+                classType: Jumpster
+            }
+        ]); 
+        
+        this.enemies.addMultiple(this.enemyArray);
+        // this.enemies.children.iterate(function (child) {
+        //     child.body.setAllowGravity(true);
+        //     child.body.setCollideWorldBounds(false);
+        // });
+        this.testEnemy = this.enemyArray[0];
+        
+
+        /** Make the player character */
         // The object layer can be accessed as an array of objects. objects[0] is the first object in the 'spawnpoint' object layer.
         var spawnX = this.map.getObjectLayer('spawnpoint').objects[0].x;
         var spawnY = this.map.getObjectLayer('spawnpoint').objects[0].y;
@@ -162,7 +245,7 @@ export default class testCourse extends Phaser.Scene {
         this.controls.addControls(this);
 
         // This line instantly sets up the player.
-        this.player = new Player({scene:this, x:spawnX, y:spawnY}, this.solids, this.semisolids, this.controls);
+        this.player = new Player({scene:this, x:spawnX, y:spawnY}, this.solids, this.enemies, this.controls);
         //this.player.setTexture(this.textures.get('dude'));
         
         // this.player = this.physics.add.sprite(spawnX, spawnY, 'dude');
@@ -183,23 +266,28 @@ export default class testCourse extends Phaser.Scene {
         this.cameras.main.setDeadzone(100, 50);
         this.cameras.main.setFollowOffset(0, 0);
 
-        propertiesText = this.add.text(16, 540, 'Properties: ', {
+        propertiesText = this.add.text(16, 600, 'Properties: ', {
             fontSize: '18px',
             fill: '#ffffff'
         });
+        propertiesText.setScrollFactor(0);
         
         // Go to next scene!
         this.input.keyboard.on('keydown-Q', () => {
-            this.scene.start('testCourse2');
+            this.scene.start('testCourse');
         });
 
         this.input.keyboard.on('keydown-ENTER', () => {
             if (!this.physics.world.isPaused)
                 this.physics.world.pause();
+                
             else 
                 this.physics.world.resume();
         });
         this.tickCount = 0;
+
+        
+        // this.player.setCollideWorldBounds(true);
     }
 
 
@@ -212,14 +300,13 @@ export default class testCourse extends Phaser.Scene {
     
     update (time, delta)
     {
-        // Timer
-        // if (time % INTERVAL == 0) {
-        //     tickCount++;
-        // }
-
-        // Controls and movement. Could be remade into a switch statement.
-        if (!this.physics.world.isPaused)
+        
+        if (!this.physics.world.isPaused) {
             this.player.update(time, delta);
+            this.enemies.children.iterate(function(child) {
+                child.update(time, delta);
+            });
+        }
 
         // DEBUG: Record maximum y velocity after each fall
         // if (!this.player.body.onFloor()) {
@@ -264,9 +351,10 @@ export default class testCourse extends Phaser.Scene {
             {
                 // Note: JSON.stringify will convert the object tile properties to a string
                 propertiesText.setText('!Properties: ' + JSON.stringify(tile.properties) + 
-                '\n faceLeft: ' + tile.faceLeft + ' faceRight: ' + tile.faceRight +
-                '\n collideLeft: ' + tile.collideLeft + ' collideRight: ' + tile.collideRight + ' canCollide: ' + tile.canCollide + ' collideUp: ' + tile.collideUp +
-                '\n x: ' + tile.x + ' y: ' + tile.y);
+                '\n faceLeft: ' + tile.faceLeft + ' faceRight: ' + tile.faceRight + ' faceBottom: ' + tile.faceBottom +
+                '\n collideLeft: ' + tile.collideLeft + ' collideRight: ' + tile.collideRight + ' canCollide: ' + tile.canCollide + ' collideUp: ' + tile.collideUp + ' collideDown: ' + tile.collideDown +
+                '\n x: ' + tile.x + ' y: ' + tile.y +
+                '\n worldX: ' + tile.pixelX + ' worldY: ' + tile.pixelY);
                 tile.properties.viewed = true;
             }
         }
@@ -286,14 +374,22 @@ export default class testCourse extends Phaser.Scene {
             + '\n list: ' + this.textures.getTextureKeys()
             + '\n tangent: ' + this.player.flipLastTan.x + ', ' + this.player.flipLastTan.y
             + '\n drag: ' + this.player.body.drag.x 
-            + '\n angle: ' + this.player.flipPath.startAngle + ', ' + this.player.flipPath.endAngle
+            + '\n angle: ' + this.player.flipAngle
             + '\n ticks: ' + this.player.ticks + ' time: ' + time
             + '\n maxY: ' + this.player.maxY
             + '\n isJumping: ' + this.player.isJumping + this.player.cursors.jump.isDown
+            + '\n spikes: ' + this.player.hurtRan
+            + '\n YAcceleration: ' + this.player.body.acceleration.y
+            + '\n Lasering: ' + this.player.lasering + ' CanLaser: ' + this.player.canLaser
+            //+ 'Enemy x: ' + this.testEnemy.body.x
+            + '\n HP: ' + this.player.HP
+            //+ '\n Tile coords: ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.x : null) 
+            //+ ' ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.y : null) + ' ' + this.testEnemy.x
             + '\nArrow keys to move left and right. '
             + 'Press Z to jump. '
-            + 'Press X to do a side kick. '
-            + 'Press Q to play a different course!');
+            + 'Press X to do an attack. '
+            + 'Press ENTER to pause or resume.'
+            + 'Press Q to reload map.');
 
         // Music player
         this.model = this.sys.game.globals.model;
