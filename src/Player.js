@@ -1026,7 +1026,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.laser = this.scene.add.rectangle(laserX, laserY, this.L_WIDTH, this.L_HEIGHT);
             //var laser = new Phaser.GameObjects.Rectangle(this.scene, 1, 2, 3, 4);
             this.pHitboxes.add(this.laser);
-            this.laser.setOrigin(0, 0);
             
             this.laser.body.setAllowGravity(false);
         }
@@ -1037,15 +1036,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // var laserX = this.getBottomCenter().x;
         // var laserY = this.getBottomCenter().y;
         // Extend down
-        this.alignWithPlayer(this.laser, 0, this.body.height / 2);
-
-        while (i < 1000 && !checkWallManual(this.xDirection.DOWN, this.laser.body.position.x, this.laser.body.width, this.laser.y, this.laser.body.height, this.map)) {
+        this.alignWithPlayer(this.laser, 0, 0);
+        this.laser.height = this.L_HEIGHT;
+        this.laser.body.height = this.L_HEIGHT;
+        while (i < 200 && !checkWallManual(this.xDirection.DOWN, this.laser.body.position.x, this.laser.body.width, this.laser.body.position.y, this.laser.body.height, this.map)) {
+            // console.log(!checkWallManual(this.xDirection.DOWN, this.laser.body.position.x, this.laser.body.width, this.laser.body.position.y, this.laser.body.height, this.map));
+            this.laser.setSize(this.laser.width, this.laser.height + this.L_INCREMENT);
             this.laser.body.setSize(this.laser.body.width, this.laser.body.height + this.L_INCREMENT);
             // this.laser.y += 4;
             // this.laserMask.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
-
+            // console.log(this.laser.body.height);
             // this.laserMask.x -= this.L_INCREMENT / 2;
-            //console.log(this.laser.body.position.x);
+            
             i++;
         }
     }
@@ -1098,6 +1100,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             vy = -this.flipReboundVec.y;
             hit = true;
         }
+
+        if (this.lasering && this.scene.physics.overlap(this.laser, enemy)) {
+            vx = this.body.velocity.x * 1.5;
+            vy = 0;
+            hit = true;
+        }
+
         if (hit && enemy.recoilVulnerable) {
             enemy.hit(vx, vy * 2);
             console.log(vx);

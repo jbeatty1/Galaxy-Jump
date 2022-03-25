@@ -145,6 +145,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
 
         if (nextWall != null && nextWall.properties.solid && !nextWall.properties.semisolid) {
+            // console.log(nextWall.x + ', ' + nextWall.y);
             return true;
         }
         else {
@@ -279,13 +280,14 @@ export function checkWallManual(direction, x, width, y, height, map) {
        nextWall = map.getTileAtWorldXY((x + width) + 1, y);
    }
    else if (direction == xDirection.UP) {
-       nextWall = map.getTileAtWorldXY(x, y);
+       nextWall = map.getTileAtWorldXY(x, y - 1);
    }
    else if (direction == xDirection.DOWN) {
-       nextWall = map.getTileAtWorldXY(x, y + height);
+       nextWall = map.getTileAtWorldXY(x, (y + height) + 1);
    }
 
-   if (nextWall != null && nextWall.properties.solid && !nextWall.properties.semisolid) {
+   if (nextWall != null && nextWall.properties.solid && (!nextWall.properties.semisolid || direction == xDirection.DOWN)) {
+       console.log(nextWall.x + ', ' + nextWall.y);
        return true;
    }
    else {
