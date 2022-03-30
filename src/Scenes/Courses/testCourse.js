@@ -11,7 +11,7 @@ If you want to see what everything else is, I would recommend looking at the oth
 
 This is made using the Phaser 3 game engine from https://github.com/photonstorm/phaser
 @author Tony Imbesi
-@version 3/29/2022
+@version 3/30/2022
 
 License: https://opensource.org/licenses/MIT|MIT License
 Copyright 2020 Photon Storm Ltd.
@@ -34,6 +34,7 @@ import Enemy from "../../Objects/Enemy";
 import Walker from "../../Objects/Walker";
 import Walker2 from "../../Objects/Walker2";
 import LaserCannon from "../../Objects/LaserCannon";
+import Bat from "../../Objects/Bat";
 import Jumpster from "../../Objects/Jumpster";
 import CometSpawner from "../../Objects/CometSpawner";
 import Comet from "../../Objects/Comet";
@@ -220,6 +221,10 @@ export default class testCourse extends Phaser.Scene {
             {
                 gid: 71,
                 classType: LaserCannon
+            },
+            {
+                gid: 72,
+                classType: Bat
             },
             {
                 gid: 75,
