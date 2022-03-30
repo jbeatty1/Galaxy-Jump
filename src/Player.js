@@ -157,7 +157,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.crouching = false;
 
         this.canAttack = true;
-        this.attackDelay = 25 * this.INTERVAL;
+        this.attackDelay = 20 * this.INTERVAL; // Time in milliseconds before player can attack again
         this.atkDelayEnd = 0;
         this.reboundLanded = false;
 
