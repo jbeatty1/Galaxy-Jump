@@ -33,7 +33,9 @@ export default class Bat extends Enemy {
 
         this.moveSpeed = 300; // Movement speed for this enemy
         this.INTERVAL = 16;
-        this.moveTimer = 15 * this.INTERVAL;
+        // moveTimer is inversely proportional to how crazy the bat is
+        this.moveTimer = 15 * this.INTERVAL; // Determines how quickly this bat will change direction.
+        // moveAngle is regularly proportional to how crazy the bat is
         this.moveAngle = 120; // The enemy's movement will deviate by this many degrees positively or negatively.
         this.ticks = 0;
         
@@ -63,11 +65,14 @@ export default class Bat extends Enemy {
             this.anims.play('move', true);
             if (this.ticks >= this.moveTimer) {
                 console.log('changed direction');
+                // First, update the velocity vector to face the player.
                 this.scene.physics.moveToObject(this, this.scene.player, this.moveSpeed);
+                // Now rotate it randomly between -angle and +angle.
                 var angle = Phaser.Math.Between(-this.moveAngle, this.moveAngle);
                 angle = angle * Math.PI / 180; // Convert to radians
                 this.body.velocity.rotate(angle);
                 this.ticks = 0;
+                // Repeat every so often.
             }
         
             
