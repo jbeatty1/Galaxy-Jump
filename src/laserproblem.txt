@@ -1,0 +1,169 @@
+// Code from: https://labs.phaser.io/edit.html?src=src/physics/arcade/add%20body%20to%20shape.js
+// Modified by: Tony Imbesi
+// Copy-paste this code into the link above and see if you can get all the rectangles to extend out with their bodies (purple outline) all in one shot.
+var config = {
+    type: Phaser.AUTO,
+    parent: 'phaser-example',
+    backgroundColor: '#0072bc',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: true
+        }
+    },
+    scene: {
+        create: create,
+        update: update
+    }
+};
+
+var cursors;
+var player;
+
+var game = new Phaser.Game(config);
+
+var count = 0;
+var inc = 32;
+var width1 = 32;
+var width2 = 32;
+var x2 = 400;
+var height3 = 32;
+var height4 = 32;
+var y4 = 300;
+var run = true;
+
+function create ()
+{
+    player = this.add.rectangle(400, 300, 64, 64, 0xffffff);
+
+    this.physics.add.existing(player, false);
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    player.body.setCollideWorldBounds(true);
+
+    rect = this.add.rectangle(player.getCenter().x, player.getCenter().y, 32, 32, 0x553255);
+
+    this.physics.add.existing(rect, false);
+
+    rect2 = this.add.rectangle(player.getCenter().x, player.getCenter().y, 32, 32, 0xbb32bb);
+
+    this.physics.add.existing(rect2, false);
+
+    rect3 = this.add.rectangle(player.getCenter().x, player.getCenter().y, 32, 32, 0x333233);
+
+    this.physics.add.existing(rect3, false);
+
+    rect4 = this.add.rectangle(player.getCenter().x, player.getCenter().y, 32, 32, 0x3200ff);
+
+    this.physics.add.existing(rect4, false);
+
+    this.input.on('pointerdown', (pointer) => {
+        while (count < 5)
+        {
+            width1 += inc;
+            width2 += inc;
+            x2 -= inc;
+            height3 += inc;
+            height4 += inc;
+            y4 -= inc;
+
+            count++;
+        }
+        count = 0;
+
+        console.log("Before1: " + rect.body.x);
+        rect.setSize(width1, 32);
+        rect.body.setSize(width1, 32);
+        rect.body.position.x = rect.getCenter().x;
+        console.log("After1: " + rect.body.x);
+
+        console.log("Before2: " + rect2.body.x);
+        rect2.setSize(width2, 32);
+        rect2.x = x2;
+        rect2.body.setSize(width2, 32);
+        rect2.body.position.x = x2;
+        console.log("After2: " + rect2.body.x);
+
+        console.log("Before3: " + rect3.body.y);
+        rect3.setSize(32, height3);
+        rect3.body.setSize(32, height3);
+        rect3.body.position.y = rect3.getCenter().y;
+        console.log("After3: " + rect3.body.y);
+
+        console.log("Before4: " + rect4.body.y);
+        rect4.setSize(32, height3);
+        rect4.y = y4;
+        rect4.body.setSize(32, height4);
+        rect4.body.position.y = y4;
+        console.log("After4: " + rect4.body.y);
+        run = false;
+    });
+}
+
+
+function update ()
+{
+    player.body.setVelocity(0);
+
+    if (cursors.left.isDown)
+    {
+        player.body.setVelocityX(-300);
+    }
+    else if (cursors.right.isDown)
+    {
+        player.body.setVelocityX(300);
+    }
+
+    if (cursors.up.isDown)
+    {
+        player.body.setVelocityY(-300);
+    }
+    else if (cursors.down.isDown)
+    {
+        player.body.setVelocityY(300);
+    }
+
+    if (cursors.space.isDown && run)
+    {
+        while (count < 5)
+        {
+            width1 += inc;
+            width2 += inc;
+            x2 -= inc;
+            height3 += inc;
+            height4 += inc;
+            y4 -= inc;
+
+            count++;
+        }
+        count = 0;
+
+        console.log("Before1: " + rect.body.x);
+        rect.setSize(width1, 32);
+        rect.body.setSize(width1, 32);
+        rect.body.position.x = rect.getCenter().x;
+        console.log("After1: " + rect.body.x);
+
+        console.log("Before2: " + rect2.body.x);
+        rect2.setSize(width2, 32);
+        rect2.x = x2;
+        rect2.body.setSize(width2, 32);
+        rect2.body.position.x = x2;
+        console.log("After2: " + rect2.body.x);
+
+        console.log("Before3: " + rect3.body.y);
+        rect3.setSize(32, height3);
+        rect3.body.setSize(32, height3);
+        rect3.body.position.y = rect3.getCenter().y;
+        console.log("After3: " + rect3.body.y);
+
+        console.log("Before4: " + rect4.body.y);
+        rect4.setSize(32, height3);
+        rect4.y = y4;
+        rect4.body.setSize(32, height4);
+        rect4.body.position.y = y4;
+        console.log("After4: " + rect4.body.y);
+        run = false;
+    }
+}
