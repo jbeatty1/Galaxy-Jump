@@ -34,8 +34,6 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.recoilX = 200;
         this.recoilY = 200;
         this.heavy = false;
-        this.spawner = false;
-        this.toDestroy = false;
 
         this.hitboxWidth = 32;
         this.hitboxHeight = 32;
@@ -63,9 +61,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.ticks = 0;
 
         this.tileCollider = this.scene.physics.add.collider(this, this.layer);
-        this.breakCollider = this.scene.physics.add.overlap(this, this.layer, this.breakTile, null, this);
         this.selfCollider = this.scene.physics.add.overlap(this, this.group, this.checkSelfCollision, null, this);
-        
     }
 
     update(time, delta) {
@@ -190,30 +186,6 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
-    /**
-     * Break through special tiles if this enemy is launched through them.
-     */
-    breakTile(enemy1, tile) {
-        if (!this.alive && tile.properties.projectile) {
-            // Reused code from Player.js. It would be good to have this available to both Enemy.js and Player.js
-            // in an external class.
-            this.group.getChildren().forEach(e => {
-                if (e.alive && e.body.enable) { 
-                    if (this.layer.getTileAtWorldXY(e.x, e.y + e.body.height + 1) === tile
-                        || this.layer.getTileAtWorldXY(e.x - 1, e.y) === tile
-                        || this.layer.getTileAtWorldXY(e.x + e.body.width + 1, e.y) === tile) {
-                        e.recoilVulnerable = true;
-                        e.body.setAllowGravity(true);
-                        e.hit(this.body.velocity.x, -150);
-                        // console.log("Enemy clause worked");
-                    }
-                }
-            });
-
-            this.layer.removeTileAt(tile.x, tile.y);
-        }
-    }
-
     turnAround() {
         if (this.facing == this.xDirection.LEFT) {
             this.facing = this.xDirection.RIGHT; 
@@ -236,7 +208,6 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (!this.recoilVulnerable)
             return;
 
-        console.log("ENEMY HIT");
         this.alive = false;
         this.body.setVelocityX(vx);
         this.body.setVelocityY(vy);
@@ -252,15 +223,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         if ((this.body.position.x + this.body.width < 0) || this.body.position.x > this.scene.WORLD_WIDTH
             || this.body.position.y > this.scene.WORLD_HEIGHT) {
             this.disableBody(true, true);
-            // this.toDestroy = true;
         }
     }
 
     checkSelfCollision(enemy1, enemy2) {
         //console.log("Collision ran");
-        if (this.recoilVulnerable && this.alive && !enemy2.alive && !enemy2.spawner) {
-            console.log("SELF COLLISION");
-            console.log("enemy2 x: " + enemy2.x);
+        if (this.recoilVulnerable && this.alive && !enemy2.alive) {
             this.hit(-enemy2.body.velocity.x * 0.5, -enemy2.body.velocity.y * 0.7);
             this.body.setBounce(1, 1);
             this.scene.physics.collide(this, enemy2);
@@ -271,27 +239,6 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         var cameraBounds = new Phaser.Geom.Rectangle(this.cam.scrollX, this.cam.scrollY, this.cam.displayWidth, this.cam.displayHeight);
         //console.log(cameraBounds.x + ', ' + cameraBounds.width);
         return cameraBounds.contains(this.getCenter().x, this.getCenter().y);
-    }
-
-    /**
-     * If this is called during the update method, it will load and unload/despawn the enemy
-     * based on its appearance on screen.
-     * 
-     * @param {Boolean} despawn whether this enemy should despawn when it is on screen or not
-     */
-    checkOffScreen(despawn) {
-        if (this.isOnScreen() && this.body.enable) {
-            this.enableBody(false, this.x, this.y, true, true);
-        }
-        else if (despawn) {
-            // console.log('ENEMY KILLED');
-            this.alive = false;
-            this.disableBody(true, true);
-            // this.toDestroy = true;
-        }
-        else {
-            this.disableBody(false, false);
-        }
     }
 
     /**
@@ -353,14 +300,4 @@ export function checkWallManual(direction, x, width, y, height, map) {
        //     }
        return false;
    }
-}
-
-/**
- * Check to see if this object is on screen.
- * @returns true if the object is on screen
- */
-export function isOnScreen() {
-    var cameraBounds = new Phaser.Geom.Rectangle(this.cam.scrollX, this.cam.scrollY, this.cam.displayWidth, this.cam.displayHeight);
-    //console.log(cameraBounds.x + ', ' + cameraBounds.width);
-    return cameraBounds.contains(this.getCenter().x, this.getCenter().y);
 }

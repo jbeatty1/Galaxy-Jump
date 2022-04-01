@@ -11,7 +11,7 @@ If you want to see what everything else is, I would recommend looking at the oth
 
 This is made using the Phaser 3 game engine from https://github.com/photonstorm/phaser
 @author Tony Imbesi
-@version 3/29/2022
+@version 3/20/2022\
 
 License: https://opensource.org/licenses/MIT|MIT License
 Copyright 2020 Photon Storm Ltd.
@@ -35,8 +35,6 @@ import Walker from "../../Objects/Walker";
 import Walker2 from "../../Objects/Walker2";
 import LaserCannon from "../../Objects/LaserCannon";
 import Jumpster from "../../Objects/Jumpster";
-import CometSpawner from "../../Objects/CometSpawner";
-import Comet from "../../Objects/Comet";
 
 
 
@@ -224,10 +222,6 @@ export default class testCourse extends Phaser.Scene {
             {
                 gid: 75,
                 classType: Jumpster
-            },
-            {
-                gid: 76,
-                classType: CometSpawner
             }
         ]); 
         
@@ -269,7 +263,7 @@ export default class testCourse extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, this.WORLD_WIDTH, this.WORLD_HEIGHT);
 
         this.cameras.main.startFollow(this.player, false, 1, 1); // Setting 2nd parameter to 'true' will make the camera round its position value to integers
-        this.cameras.main.setDeadzone(70, 50);
+        this.cameras.main.setDeadzone(100, 50);
         this.cameras.main.setFollowOffset(0, 0);
 
         propertiesText = this.add.text(16, 600, 'Properties: ', {

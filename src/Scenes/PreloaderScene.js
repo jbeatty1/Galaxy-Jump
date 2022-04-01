@@ -95,7 +95,6 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.spritesheet('copter', 'assets/entities/copter.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('jumpster', 'assets/entities/jumpster.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('funbat', 'assets/entities/funbat.png', { frameWidth: 16, frameHeight: 16 });
-        this.load.spritesheet('comet', 'assets/entities/comet.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('spikes', 'assets/entities/spikes.png');
   }
 

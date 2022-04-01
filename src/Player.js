@@ -1108,7 +1108,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         if (hit && enemy.recoilVulnerable) {
-            // console.log("PLAYER HIT");
             enemy.hit(vx, vy * 2);
             console.log(vx);
         }
@@ -1231,7 +1230,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                     e.recoilVulnerable = true;
                     e.body.setAllowGravity(true);
                     e.hit(Phaser.Math.Between(-150, 150), this.S_SLIDE_YVEL);
-                    // console.log("Enemy clause worked");
+                    console.log("Enemy clause worked");
                 }
             }
         });

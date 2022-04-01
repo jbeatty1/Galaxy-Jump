@@ -110,8 +110,6 @@ export default class Laser extends Enemy {
         // Only update if not paused
         this.ticks += delta;
 
-        // Manage the state of the laser. Each of the following methods will change
-        // the sequence variable to update the laser's state.
         if (super.isOnScreen() && this.alive) {
             this.beginShotSequence();
         }
@@ -126,13 +124,8 @@ export default class Laser extends Enemy {
         }
 
         super.checkOutOfBounds();
-        this.checkAttachment();
     }
 
-    /**
-     * Begins the firing sequence. The laser should be shown on screen before it starts
-     * winding up a shot.
-     */
     beginShotSequence() {
         /** Play notice animation and begin sequence if it hasn't started/finished already */
         if (this.sequence === this.seq.STOPPED) {
@@ -141,9 +134,6 @@ export default class Laser extends Enemy {
         }
     }
 
-    /**
-     * Next part of the sequence. Show the notice animation until it's time to charge.
-     */
     wait() {
         this.anims.play('notice', true);
         if (this.timer != -1 && this.ticks >= this.timer) {
@@ -152,11 +142,6 @@ export default class Laser extends Enemy {
         }
     }
 
-    /**
-     * Next part of the sequence. Show the charging animation until it's time to fire.
-     * It calls laserSetup() here so that it only runs once. Otherwise, it's similar
-     * to the previous two methods.
-     */
     chargeSequence() {
         this.anims.play('charge', true);
         if (this.timer != -1 && this.ticks >= this.timer) {
@@ -166,9 +151,6 @@ export default class Laser extends Enemy {
         }
     }
 
-    /**
-     * Final part of the sequence. Fire the laser, and reset the cycle.
-     */
     fire() {
         this.anims.play('fire', true);
         this.drawLaser();
@@ -177,16 +159,11 @@ export default class Laser extends Enemy {
         }
     }
 
-    /**
-     * Set up the laser with its own physics body, texture, and collision.
-     * TODO: Add the texture.
-     */
     laserSetup() {
         // Begin modified code from https://www.emanueleferonato.com/2019/04/24/add-a-nice-time-bar-energy-bar-mana-bar-whatever-bar-to-your-html5-games-using-phaser-3-masks/
         var laserX = 0;
         var laserY = this.getCenter().y;
         var originX = 0;
-        // Calculate the offset so that the laser appears right at the tip of the laser.
         if (this.facing == this.xDirection.LEFT) {
             laserX = this.getLeftCenter().x + this.L_OFFSET;
             originX = 1;
@@ -200,7 +177,6 @@ export default class Laser extends Enemy {
         
         this.laser.body.setAllowGravity(false);
         
-        // The following lines use a mask approach. I'm not sure if this is really the right way to do it.
         //  // a copy of the energy bar to be used as a mask. Another simple sprite but...
         this.laserMask = this.scene.add.sprite(laserX, laserY, 'laserbeam');
         this.laserMask.setOrigin(originX, 0.5);
@@ -215,10 +191,6 @@ export default class Laser extends Enemy {
         // End modified code from https://www.emanueleferonato.com/2019/04/24/add-a-nice-time-bar-energy-bar-mana-bar-whatever-bar-to-your-html5-games-using-phaser-3-masks/
     }
 
-    /**
-     * Draws the laser until it runs into a solid wall.
-     * Currently it uses if statements to handle the extension.
-     */
     drawLaser() {
         var checkRange = this.L_WIDTH + this.L_OFFSET;
         var i = 0;
@@ -250,10 +222,6 @@ export default class Laser extends Enemy {
             this.scene.player.hurt(this.damage, this.recoilX, this.recoilY);
     }
 
-    /**
-     * Reset this laser cannon's state.
-     * Remove the laser, reset its timer, and reset its animation cycle.
-     */
     resetState() {
         if (this.laser != null)
             this.laser.destroy();
@@ -264,32 +232,12 @@ export default class Laser extends Enemy {
         this.sequence = this.seq.STOPPED;
     }
 
-    /**
-     * In special cases, it can still be destroyed. 
-     * @param {Number} vx the horizontal velocity
-     * @param {Number} vy the vertical velocity
-     */
     hit(vx, vy) {
         super.hit(vx, vy);
-        this.body.setAllowGravity(true);
         this.setAngularVelocity(Math.max(vx, vy));
         this.tileCollider.active = false;
         this.resetState();
     }
 
-    /**
-     * If the laser is no longer attached to a solid tile, destroy it.
-     */
-    checkAttachment() {
-        if (this.alive) {
-            if (this.facing == this.xDirection.LEFT && !super.checkWall(this.xDirection.RIGHT)) {
-                this.recoilVulnerable = true;
-                this.hit(-this.recoilX, 0);
-            }
-            if (this.facing == this.xDirection.RIGHT && !super.checkWall(this.xDirection.LEFT)) {
-                this.recoilVulnerable = true;
-                this.hit(this.recoilX, 0);
-            }
-        }
-    }
+    
 }
