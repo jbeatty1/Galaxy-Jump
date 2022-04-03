@@ -107,7 +107,7 @@ export default class PreloaderScene extends Phaser.Scene {
   }
 
   ready () {
-        this.scene.start('Title');
+        this.scene.start('Title'); // Comment this line out to ensure everything is loaded. Keep it in to get to the title faster.
         this.readyCount++;
         if (this.readyCount === 2) {
           this.scene.start('Title');
