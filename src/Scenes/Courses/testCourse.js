@@ -11,7 +11,7 @@ If you want to see what everything else is, I would recommend looking at the oth
 
 This is made using the Phaser 3 game engine from https://github.com/photonstorm/phaser
 @author Tony Imbesi
-@version 3/29/2022
+@version 3/30/2022
 
 License: https://opensource.org/licenses/MIT|MIT License
 Copyright 2020 Photon Storm Ltd.
@@ -34,6 +34,7 @@ import Enemy from "../../Objects/Enemy";
 import Walker from "../../Objects/Walker";
 import Walker2 from "../../Objects/Walker2";
 import LaserCannon from "../../Objects/LaserCannon";
+import Bat from "../../Objects/Bat";
 import Jumpster from "../../Objects/Jumpster";
 import CometSpawner from "../../Objects/CometSpawner";
 import Comet from "../../Objects/Comet";
@@ -222,6 +223,10 @@ export default class testCourse extends Phaser.Scene {
                 classType: LaserCannon
             },
             {
+                gid: 72,
+                classType: Bat
+            },
+            {
                 gid: 75,
                 classType: Jumpster
             },
@@ -290,6 +295,13 @@ export default class testCourse extends Phaser.Scene {
             else 
                 this.physics.world.resume();
         });
+
+        this.input.keyboard.on('keydown-F', () => {
+            if (this.physics.world.isPaused) {
+                this.physics.world.resume();
+                this.frame = true;
+            }
+        });
         this.tickCount = 0;
 
         
@@ -312,6 +324,11 @@ export default class testCourse extends Phaser.Scene {
             this.enemies.children.iterate(function(child) {
                 child.update(time, delta);
             });
+        }
+
+        if (this.frame) {
+            this.frame = false;
+            this.physics.world.pause();
         }
 
         // DEBUG: Record maximum y velocity after each fall
@@ -383,12 +400,15 @@ export default class testCourse extends Phaser.Scene {
             + '\n angle: ' + this.player.flipAngle
             + '\n ticks: ' + this.player.ticks + ' time: ' + time
             + '\n maxY: ' + this.player.maxY
-            + '\n isJumping: ' + this.player.isJumping + this.player.cursors.jump.isDown
-            + '\n spikes: ' + this.player.hurtRan
+            + '\n crouching: ' + this.player.crouching
+            + '\n animsResetFlag: ' + this.player.animsResetFlag
+            + '\n animsHoldFlag: ' + this.player.animsHoldFlag
             + '\n YAcceleration: ' + this.player.body.acceleration.y
-            + '\n Lasering: ' + this.player.lasering + ' CanLaser: ' + this.player.canLaser
+            + '\n LaserPrep: ' + this.player.laserPrep + ' CanLaser: ' + this.player.canLaser
             //+ 'Enemy x: ' + this.testEnemy.body.x
-            + '\n HP: ' + this.player.HP
+            + "\n originX: " + this.player.originX
+            + "\n hitbox offsetX: " + this.player.body.offset.x
+            + "\n hitbox offsetY: " + this.player.body.offset.y
             //+ '\n Tile coords: ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.x : null) 
             //+ ' ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.y : null) + ' ' + this.testEnemy.x
             + '\nArrow keys to move left and right. '
