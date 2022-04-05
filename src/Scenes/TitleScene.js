@@ -15,87 +15,36 @@ export default class TitleScene extends Phaser.Scene {
     }
 
     preload () {
-        var startScreen = (function(input) {
 
-            var hue = 0; 
-            var transitioning = false;
-        
-        
-            var wasButtonDown = false;
-        
-
-            function centerText(ctx, text, y) {
-                var measurement = ctx.measureText(text);
-                var x = (ctx.canvas.width - measurement.width) / 2;
-                ctx.fillText(text, x, y);
-            }
-            
-            function draw(ctx, elapsed) {
-                
-             
-                var y = ctx.canvas.height / 2;
-                
-                var color = 'rgb(' + hue + ',0,0)';
-              
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        
-              
-                ctx.fillStyle = 'white';
-                ctx.font = '48px monospace';
-                centerText(ctx, 'Galaxy Jump', y);
-        
-           
-                ctx.fillStyle = color;
-                ctx.font = '24px monospace';
-                centerText(ctx, 'click to begin', y + 30);
-            }
-        
-
-       
-            function update() {
-                hue += 1 * direction;
-                if (hue > 255) direction = -1;
-                if (hue < 0) direction = 1;
-                
-              
-                var isButtonDown = input.isButtonDown();
-        
-                
-                var mouseJustClicked = !isButtonDown && wasButtonDown;
-        
-                
-                if (mouseJustClicked && !transitioning) {
-                    transitioning = true;
-                    // do something here to transition to the actual game
-                }
-        
-                wasButtonDown = isButtonDown;
-            }
-        
-            return {
-                draw: draw,
-                update: update
-            };
-        
-        }());
+        this.load.image('background', 'assets/bg/titleBack.png');
+      
     }
 
-//     create () {
+    create () {
+        this.background = this.add.image(0, 0, "background")
+        .setOrigin(0, 0);
+        // Based on your game size, it may "stretch" and distort.
+        this.background.displayWidth = this.sys.canvas.width;
+        this.background.displayHeight = this.sys.canvas.height;
+
+
+        var text = this.add.text(100,100, 'Galaxy Jump!', { color: '#00ff00', align: 'right' });
 
         
-//         // Game
-//         this.gameButton = new Button(this, config.width/2, config.height/2 - 100, 'blueButton1', 'blueButton2', 'Play', 'Game');
-//         // Options
-//         this.optionsButton = new Button(this, config.width/2, config.height/2, 'blueButton1', 'blueButton2', 'Options', 'Options');
-//         // Credits
-//         this.creditsButton = new Button(this, config.width/2, config.height/2 + 100, 'blueButton1', 'blueButton2', 'Credits', 'Credits');
-//         // this.model = this.sys.game.globals.model;
-//         // Music player
-//         // if (this.model.musicOn === true && this.model.bgMusicPlaying === false) {
-//         //     this.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
-//         //     this.bgMusic.play();
-//         //     this.model.bgMusicPlaying = true;
-//         //     this.sys.game.globals.bgMusic = this.bgMusic;
-//         // }
-//     }
-// }
+        // Game
+
+        this.gameButton = new Button(this, config.width/2, config.height/2 - 100, 'blueButton1', 'blueButton2', 'Play', 'Game');
+        // Options
+        this.optionsButton = new Button(this, config.width/2, config.height/2, 'blueButton1', 'blueButton2', 'Options', 'Options');
+        // Credits
+        this.creditsButton = new Button(this, config.width/2, config.height/2 + 100, 'blueButton1', 'blueButton2', 'Credits', 'Credits');
+        // this.model = this.sys.game.globals.model;
+        // Music player
+        // if (this.model.musicOn === true && this.model.bgMusicPlaying === false) {
+        //     this.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
+        //     this.bgMusic.play();
+        //     this.model.bgMusicPlaying = true;
+        //     this.sys.game.globals.bgMusic = this.bgMusic;
+        // }
+    }
+}
