@@ -51,10 +51,12 @@ export default class Laser extends Enemy {
         this.timer = -1;
 
         this.laser = null;
+        this.laserBaseX = 0;
+        this.laserBaseY = 0;
         this.L_WIDTH = 32;
         this.L_HEIGHT = 32;
         this.L_OFFSET = 4;
-        this.L_INCREMENT = 8;
+        this.L_INCREMENT = 4;
 
         this.anims.create({
             key: 'idle',
@@ -100,8 +102,9 @@ export default class Laser extends Enemy {
             if (super.checkWall(this.xDirection.RIGHT)) {
                 this.facing = this.xDirection.LEFT;
             }
+            this.laserBaseY = this.getCenter().y;
             this.anims.play('idle');
-            console.log(this.facing + ', ' + this.x);
+            // console.log(this.facing + ', ' + this.laserBaseX);
             this.init = true;
             this.sequence = this.seq.STOPPED;
         }
@@ -183,27 +186,24 @@ export default class Laser extends Enemy {
      */
     laserSetup() {
         // Begin modified code from https://www.emanueleferonato.com/2019/04/24/add-a-nice-time-bar-energy-bar-mana-bar-whatever-bar-to-your-html5-games-using-phaser-3-masks/
-        var laserX = 0;
-        var laserY = this.getCenter().y;
-        var originX = 0;
-        // Calculate the offset so that the laser appears right at the tip of the laser.
         if (this.facing == this.xDirection.LEFT) {
-            laserX = this.getLeftCenter().x + this.L_OFFSET;
-            originX = 1;
+            this.laserBaseX = this.body.x + this.L_OFFSET;
         }
         else if (this.facing == this.xDirection.RIGHT) {
-            laserX = this.getRightCenter().x - this.L_OFFSET;
+            this.laserBaseX = this.body.x + this.body.width - this.L_OFFSET;
         }
-        this.laser = this.scene.add.rectangle(laserX, laserY, this.L_WIDTH, this.L_HEIGHT);
+        this.laser = this.scene.add.rectangle(this.laserBaseX, this.laserBaseY, this.L_INCREMENT, this.L_HEIGHT);
         this.scene.physics.add.existing(this.laser);
-        this.laser.setOrigin(originX, 0.5);
+        this.laser.setOrigin(0, 0.5);
+        console.log("Original X: " + this.laser.x);
+        console.log("Base X: " + this.laserBaseX);
         
         this.laser.body.setAllowGravity(false);
         
         // The following lines use a mask approach. I'm not sure if this is really the right way to do it.
         //  // a copy of the energy bar to be used as a mask. Another simple sprite but...
-        this.laserMask = this.scene.add.sprite(laserX, laserY, 'laserbeam');
-        this.laserMask.setOrigin(originX, 0.5);
+        this.laserMask = this.scene.add.sprite(this.laserBaseX, this.laserBaseY, 'laserbeam');
+        this.laserMask.setOrigin(0, 0.5);
         if (this.facing == this.xDirection.RIGHT)
             this.laserMask.toggleFlipX();
 
@@ -220,30 +220,52 @@ export default class Laser extends Enemy {
      * Currently it uses if statements to handle the extension.
      */
     drawLaser() {
-        var checkRange = this.L_WIDTH + this.L_OFFSET;
         var i = 0;
+        this.laser.x = this.laserBaseX;
         if (this.facing == this.xDirection.LEFT) {
             // Extend left
-            if (i < 1000 && !super.checkWallManual(this.facing, this.laser.body.position.x, this.laser.body.width, this.laser.y)) {
-                this.laser.body.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
-                this.laser.x -= this.L_INCREMENT / 2;
-                this.laserMask.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
+            var dx = this.getLeftCenter().x + this.L_OFFSET;
+            var newWidth = this.L_INCREMENT;
+            while (i < 1000 && !super.checkWallManual(this.facing, dx, newWidth, this.laser.y, this.L_HEIGHT, this.map)) {
+                // this.laser.body.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
+                // this.laser.x -= this.L_INCREMENT / 2;
+                // this.laserMask.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
 
-                this.laserMask.x -= this.L_INCREMENT / 2;
+                // this.laserMask.x -= this.L_INCREMENT / 2;
                 //console.log(this.laser.body.position.x);
+
+                newWidth += this.L_INCREMENT;
+                dx -= this.L_INCREMENT;
+                // console.log("dx: " + dx);
                 i++;
             }
+            dx = newWidth;
+            this.laser.setSize(newWidth, this.L_HEIGHT);
+            this.laser.x -= dx;
+            console.log("LEFT");
+            console.log('Width: ' + newWidth);
+            console.log('New X: ' + this.laser.x);
+            console.log('New DX: ' + dx);
+            this.laser.body.setSize(newWidth, this.L_HEIGHT);
         }
         else if (this.facing == this.xDirection.RIGHT) {
             // Extend right
-            if (i < 1000 && !super.checkWallManual(this.facing, this.laser.body.position.x, this.laser.body.width, this.laser.y)) {
-                this.laser.body.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
-                this.laser.x += this.L_INCREMENT / 2;
+            var newWidth = this.L_INCREMENT;
+            while (i < 1000 && !super.checkWallManual(this.facing, this.laser.x, newWidth, this.laser.y, this.L_HEIGHT, this.map)) {
+                // this.laser.body.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
+                // this.laser.x += this.L_INCREMENT / 2;
 
-                this.laserMask.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
-                this.laserMask.x += this.L_INCREMENT / 2;
+                // this.laserMask.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
+                // this.laserMask.x += this.L_INCREMENT / 2;
+
+                newWidth += this.L_INCREMENT;
                 i++;
             }
+            this.laser.setSize(newWidth, this.L_HEIGHT);
+            console.log("RIGHT");
+            console.log('Width: ' + newWidth);
+            console.log('New X: ' + this.laser.x);
+            this.laser.body.setSize(newWidth, this.L_HEIGHT);
         }
 
         if (this.scene.physics.overlap(this.laser, this.scene.player))

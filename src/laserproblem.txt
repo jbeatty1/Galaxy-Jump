@@ -1,5 +1,6 @@
 // Code from: https://labs.phaser.io/edit.html?src=src/physics/arcade/add%20body%20to%20shape.js
 // Modified by: Tony Imbesi
+// Version: 3/24/2022
 // Copy-paste this code into the link above and see if you can get all the rectangles to extend out with their bodies (purple outline) all in one shot.
 var config = {
     type: Phaser.AUTO,

@@ -149,17 +149,17 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
 
         if (nextWall != null && nextWall.properties.solid && !nextWall.properties.semisolid) {
-            // console.log(nextWall.x + ', ' + nextWall.y);
+            console.log('Collided with: ' + nextWall.x + ', ' + nextWall.y);
             return true;
         }
         else {
-            // if (direction == this.xDirection.LEFT)
-            //     if (nextWall!= null) {
-            //         //console.log('Tile at: ' + nextWall.x + ', ' + nextWall.y + ' is not solid');
-            //     }
-            //     else {
-            //         //console.log('nextWall is null');
-            //     }
+            if (direction == this.xDirection.LEFT)
+                if (nextWall!= null) {
+                    //console.log('Tile at: ' + nextWall.x + ', ' + nextWall.y + ' is not solid');
+                }
+                else {
+                    //console.log('nextWall is null');
+                }
             return false;
         }
     }
@@ -333,10 +333,10 @@ export function checkWallManual(direction, x, width, y, height, map) {
        nextWall = map.getTileAtWorldXY((x + width) + 1, y);
    }
    else if (direction == xDirection.UP) {
-       nextWall = map.getTileAtWorldXY(x, y - 1);
+       nextWall = map.getTileAtWorldXY(x + width / 2, y - 1);
    }
    else if (direction == xDirection.DOWN) {
-       nextWall = map.getTileAtWorldXY(x, (y + height) + 1);
+       nextWall = map.getTileAtWorldXY(x + width / 2, (y + height) + 1);
    }
 
    if (nextWall != null && nextWall.properties.solid && (!nextWall.properties.semisolid || direction == xDirection.DOWN)) {
