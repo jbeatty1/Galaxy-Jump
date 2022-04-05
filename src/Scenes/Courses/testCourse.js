@@ -112,9 +112,11 @@ export default class testCourse extends Phaser.Scene {
         // First argument of addTilesetImage is the name of the tileset as shown in Tiled.
         // Second argument is the key of the image used in the tileset.
         /** Add in spikes */
-        this.spikeTiles = this.map.addTilesetImage('objects', 'objects');
-        this.spikes = this.map.createLayer('spikes', this.spikeTiles, 0, 0);
+        this.dangerTiles = this.map.addTilesetImage('objects', 'objects');
+        this.spikes = this.map.createLayer('spikes', this.dangerTiles, 0, 0);
         this.spikes.setCollisionByProperty({ spikes: true }, true);
+        this.heat = this.map.createLayer('heat', this.dangerTiles, 0, 0);
+        this.heat.setDepth(1);
 
         this.terrainTiles = this.map.addTilesetImage('fantasy-tiles_32x32', 'tiles');
         this.solids = this.map.createLayer('terrain', this.terrainTiles, 0, 0);
@@ -173,6 +175,19 @@ export default class testCourse extends Phaser.Scene {
                 tile.faceBottom = true;
             }
         });
+
+        this.heatArray = []
+        this.heat.forEachTile((tile) => {
+            if (tile.properties.heat || tile.properties.superheat) {
+                var imgString = 'heat1';
+                if (tile.properties.superheat)
+                    imgString = 'heat2';
+                var img = this.add.tileSprite(tile.pixelX, tile.pixelY, 32, 32, imgString);
+                img.setOrigin(0, 0);
+                this.heatArray.push(img);
+            }
+        });
+        this.heatIter = 0;
         
         /** Debug graphics */
         // this.debugGraphics = this.add.graphics();
@@ -324,6 +339,12 @@ export default class testCourse extends Phaser.Scene {
             this.enemies.children.iterate(function(child) {
                 child.update(time, delta);
             });
+            var iter = this.heatIter;
+            this.heatArray.forEach(function(img) {
+                img.tilePositionY -= 0.4;
+                img.tilePositionX += Math.cos(iter) * 0.5;
+            });
+            this.heatIter += 0.005;
         }
 
         if (this.frame) {
@@ -412,10 +433,14 @@ export default class testCourse extends Phaser.Scene {
             //+ '\n Tile coords: ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.x : null) 
             //+ ' ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.y : null) + ' ' + this.testEnemy.x
             + '\nArrow keys to move left and right. '
-            + 'Press Z to jump. '
-            + 'Press X to do an attack. '
-            + 'Press ENTER to pause or resume.'
-            + 'Press Q to reload map.');
+            + '\nPress Z to jump. '
+            + '\nPress X to do an attack. '
+            + '\nUP + X in the air = do a flip'
+            + '\n Kick a wall to gain extra speed'
+            + '\nDOWN + X on ground at high speed = drop kick'
+            + '\n Hold DOWN in the air = charge and fire laser'
+            + '\nPress ENTER to pause or resume.'
+            + '\nPress Q to reload map.');
 
         // Music player
         this.model = this.sys.game.globals.model;

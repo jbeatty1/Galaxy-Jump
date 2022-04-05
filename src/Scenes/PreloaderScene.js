@@ -97,6 +97,8 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.spritesheet('funbat', 'assets/entities/funbat.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('comet', 'assets/entities/comet.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('spikes', 'assets/entities/spikes.png');
+        this.load.image('heat1', 'assets/entities/warning.png');
+        this.load.image('heat2', 'assets/entities/warning2a.png');
   }
 
   create () {
@@ -107,7 +109,7 @@ export default class PreloaderScene extends Phaser.Scene {
   }
 
   ready () {
-        this.scene.start('Title');
+        this.scene.start('Title'); // Comment this line out to ensure everything is loaded. Keep it in to get to the title faster.
         this.readyCount++;
         if (this.readyCount === 2) {
           this.scene.start('Title');

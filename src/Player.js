@@ -34,6 +34,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.solids = solids;
         this.map = this.solids.tilemap;
         this.enemies = enemies;
+        this.heat = this.scene.heat;
         //this.semisolids = config.solids;
 
         
@@ -126,13 +127,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.L_LASERACCEL_UP = -500; // Laser acceleration when going upwards very fast
         this.L_LASERACCEL_DOWN = -4000; // Laser acceleration when moving down
         this.L_WIDTH = 20;
-        this.L_HEIGHT = 2;
+        this.L_HEIGHT = 4;
         this.L_INCREMENT = 4;
         this.ticksToLaser = 0;
 
         // Health variables:
         this.maxHP = 100; // Max health
         this.HP = this.maxHP;
+        this.recoveryRate = 0.07;
+        this.heatDmgRate = -0.3;
+        this.heatTaken = false;
         this.iFrames = 90 * this.INTERVAL;
         this.ticksToDamageEnd = 0;
         this.recoilVelocity = 300;
@@ -425,6 +429,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // These will similarly check the player against every tile in the 'spikes' layer and every enemy's physics body.
         this.spikeCollider = this.scene.physics.add.collider(this, this.scene.spikes, this.spikeContact, null, this);
         this.enemyCollider = this.scene.physics.add.overlap(this, this.enemies, this.enemyContact, null, this);
+
+        // Heat collider
+        this.heatCollider = this.scene.physics.add.overlap(this, this.heat, this.heatDmg, null, this);
 
         // Colliders for each move. These are actually overlaps set to only detect overlap with solid terrain.
         // Extra note: Order matters. Each collision will be checked in order of addition, 
@@ -759,7 +766,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         /** Passive attributes */
         // Regain health up to maximum
-        this.recover(0.08);
+        this.recover(this.recoveryRate);
 
         if (this.HP <= 0) {
             this.die();
@@ -932,6 +939,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.ticks <= this.hurtAnimEnd) {
             this.anims.play('hurt', true);
         }
+
+        // Ensure that the heatDmg method only runs once per update
+        this.heatTaken = false;
     } // END update
 
     /** Helper methods */
@@ -1326,6 +1336,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             var laserX = this.getBottomCenter().x;
             var laserY = this.getBottomCenter().y;
             this.laser = this.scene.add.rectangle(laserX, laserY, this.L_WIDTH, this.L_HEIGHT);
+            this.laser.setOrigin(0.5, 0);
             //var laser = new Phaser.GameObjects.Rectangle(this.scene, 1, 2, 3, 4);
             this.pHitboxes.add(this.laser);
             
@@ -1338,13 +1349,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // var laserX = this.getBottomCenter().x;
         // var laserY = this.getBottomCenter().y;
         // Extend down
-        this.alignWithPlayer(this.laser, 0, 0);
-        this.laser.height = this.L_HEIGHT;
-        this.laser.body.height = this.L_HEIGHT;
-        while (i < 200 && !checkWallManual(this.xDirection.DOWN, this.laser.body.position.x, this.laser.body.width, this.laser.body.position.y, this.laser.body.height, this.map)) {
+        this.alignWithPlayer(this.laser, 0, -2);
+        var newHeight = this.L_HEIGHT;
+        
+        while (i < 200 && !checkWallManual(this.xDirection.DOWN, this.laser.body.x, this.laser.body.width, this.laser.body.position.y, newHeight, this.map)) {
             // console.log(!checkWallManual(this.xDirection.DOWN, this.laser.body.position.x, this.laser.body.width, this.laser.body.position.y, this.laser.body.height, this.map));
-            this.laser.setSize(this.laser.width, this.laser.height + this.L_INCREMENT);
-            this.laser.body.setSize(this.laser.body.width, this.laser.body.height + this.L_INCREMENT);
+            newHeight += this.L_INCREMENT;
             // this.laser.y += 4;
             // this.laserMask.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
             // console.log(this.laser.body.height);
@@ -1352,6 +1362,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             
             i++;
         }
+        this.laser.setSize(this.L_WIDTH, newHeight);
+        this.laser.body.setSize(this.L_WIDTH, newHeight);
     }
 
     /**
@@ -1456,9 +1468,34 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.hurt(70, 300, 450);
     }
 
+    /**
+     * Handles contact with enemies.
+     * 
+     * @param {Player} body the player
+     * @param {Enemy} enemy the enemy touched by the player
+     */
     enemyContact(body, enemy) {
         if (enemy.alive && enemy.contactDmg) {
             this.hurt(enemy.damage, enemy.recoilX, enemy.recoilY);
+        }
+    }
+
+    /**
+     * Handles contact with heat tiles.
+     * 
+     * @param {Player} body the player
+     * @param {Phaser.Tilemaps.Tile} spike the spike tile collided with
+     */
+    heatDmg(body, tile) {
+        if ((tile.properties.heat || tile.properties.superheat) && !this.heatTaken) {
+            console.log("HeatDmg taken");
+            if (tile.properties.superheat) {
+                this.recover(this.heatDmgRate * 2);
+            }
+            else {
+                this.recover(this.heatDmgRate);
+            }
+            this.heatTaken = true;
         }
     }
 
