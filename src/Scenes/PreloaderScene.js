@@ -82,7 +82,7 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.image('checkedBox', 'assets/ui/blue_boxCheckmark.png');
         this.load.audio('titleMusic', ['assets/music/spelunky1.mp3']);
         
-        this.load.spritesheet('dude', 'assets/player/dude.png', { frameWidth: 32, frameHeight: 48 });
+        this.load.spritesheet('dude', 'assets/player/dude.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('cone', 'assets/entities/cone.png', { frameWidth: 32, frameHeight: 34 });
         this.load.spritesheet('supercone', 'assets/entities/supercone.png', { frameWidth: 32, frameHeight: 34 });
 
@@ -94,7 +94,7 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.image('laserbeam', 'assets/entities/laserbeam.png')
         this.load.spritesheet('copter', 'assets/entities/copter.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('jumpster', 'assets/entities/jumpster.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('funbat', 'assets/entities/funbat.png', { frameWidth: 16, frameHeight: 16 });
+        this.load.spritesheet('funbat', 'assets/entities/funbat.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('comet', 'assets/entities/comet.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('spikes', 'assets/entities/spikes.png');
   }
@@ -107,6 +107,7 @@ export default class PreloaderScene extends Phaser.Scene {
   }
 
   ready () {
+        this.scene.start('Title');
         this.readyCount++;
         if (this.readyCount === 2) {
           this.scene.start('Title');

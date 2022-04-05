@@ -412,10 +412,14 @@ export default class testCourse extends Phaser.Scene {
             //+ '\n Tile coords: ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.x : null) 
             //+ ' ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.y : null) + ' ' + this.testEnemy.x
             + '\nArrow keys to move left and right. '
-            + 'Press Z to jump. '
-            + 'Press X to do an attack. '
-            + 'Press ENTER to pause or resume.'
-            + 'Press Q to reload map.');
+            + '\nPress Z to jump. '
+            + '\nPress X to do an attack. '
+            + '\nUP + X in the air = do a flip'
+            + '\n Kick a wall to gain extra speed'
+            + '\nDOWN + X on ground at high speed = drop kick'
+            + '\n Hold DOWN in the air = charge and fire laser'
+            + '\nPress ENTER to pause or resume.'
+            + '\nPress Q to reload map.');
 
         // Music player
         this.model = this.sys.game.globals.model;

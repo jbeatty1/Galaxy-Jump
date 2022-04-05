@@ -48,7 +48,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     
         this.INTERVAL = 16; // Number of ticks in milliseconds to multiply other timer variables
         this.ticks = 0;
-        
 
         // Player's appearance:
         this.P_WIDTH = 64; // Width of the sprite
@@ -137,12 +136,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.ticksToDamageEnd = 0;
         this.recoilVelocity = 300;
         this.invincible = false;
-
-        // Animation variables:
-        this.animsResetFlag = false;
-        this.animsHoldFlag = false;
-        this.hurtAnimEnd = 0;
-        this.hurtAnimTicks = 20 * this.INTERVAL;
+        
 
         this.xDirection = {
             LEFT: 0,
@@ -173,7 +167,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.atkDelayEnd = 0;
         this.reboundLanded = false;
 
-        this.maxKickTicks = 12 * this.INTERVAL;
+        this.maxKickTicks = 9 * this.INTERVAL;
         this.ticksToKickEnd = 0;
         this.sideKicking = false;
         this.canKick = true;
@@ -250,13 +244,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         });
 
         this.anims.create({
-            key: 'fast',
-            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-            frameRate: 12,
-            repeat: -1
-        });
-
-        this.anims.create({
             key: 'turn',
             frames: [ { key: 'dude', frame: 0 } ],  // Change frame number if using a different player sprite
             frameRate: 20
@@ -272,15 +259,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         //     frameRate: 20
         // });
 
+        // Left animation for premade "dude" asset
         this.anims.create({
             key: 'sidekick',
             frames: [ { key: 'dude', frame: 9 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'hurt',
-            frames: [ { key: 'dude', frame: 14 } ],  // Change frame number if using a different player sprite
             frameRate: 20
         });
 
@@ -299,74 +281,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.anims.create({
             key: 'post-dropkick',
             frames: [ { key: 'dude', frame: 28 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'crouch',
-            frames: [ { key: 'dude', frame: 36 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'crouchprep',
-            frames: this.anims.generateFrameNumbers('dude', { start: 37, end: 38 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'jump',
-            frames: [ { key: 'dude', frame: 45 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'fall',
-            frames: [ { key: 'dude', frame: 46 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'charge',
-            frames: [ { key: 'dude', frame: 47 } ],
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'lasering',
-            frames: this.anims.generateFrameNumbers('dude', { start: 47, end: 48 }),
-            frameRate: 12,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'flip1',
-            frames: [ { key: 'dude', frame: 54 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'flip2',
-            frames: [ { key: 'dude', frame: 55 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'flip3',
-            frames: [ { key: 'dude', frame: 56 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'flip4',
-            frames: [ { key: 'dude', frame: 57 } ],  // Change frame number if using a different player sprite
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'flip5',
-            frames: [ { key: 'dude', frame: 58 } ],  // Change frame number if using a different player sprite
             frameRate: 20
         });
 
@@ -470,37 +384,21 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         else
         {
             this.setAccelerationX(0);
-            if (!this.animsHoldFlag && !this.laserPrep) {
-                this.anims.play('turn');
-            }
+            this.anims.play('turn');
         }
 
         /** Change direction on left/right press if not performing a move */
-        if (!(this.isAttacking() || this.slowTime)) {
-            if (this.cursors.left.isDown) {
-                this.xFacing = this.xDirection.LEFT;
-                this.setFlipX(true);
-                if (!this.animsHoldFlag && this.body.onFloor()) {
-                    if (this.canDropKick) {
-                        this.anims.play('fast', true);
-                    }
-                    else {
-                        this.anims.play('move', true);
-                    }
-                }
-            }
-            else if (this.cursors.right.isDown) {
-                this.xFacing = this.xDirection.RIGHT;
-                this.setFlipX(false);
-                if (!this.animsHoldFlag && this.body.onFloor()) {
-                    if (this.canDropKick) {
-                        this.anims.play('fast', true);
-                    }
-                    else {
-                        this.anims.play('move', true);
-                    }
-                }
-            }
+        if (this.cursors.left.isDown 
+            && !(this.isAttacking() || this.slowTime)) {
+            this.xFacing = this.xDirection.LEFT;
+            this.setFlipX(true);
+            this.anims.play('move', true);
+        }
+        else if (this.cursors.right.isDown 
+            && !(this.isAttacking() || this.slowTime)) {
+            this.xFacing = this.xDirection.RIGHT;
+            this.setFlipX(false);
+            this.anims.play('move', true);
         }
 
         /** Crouch */
@@ -617,6 +515,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
         else {
+            this.setOrigin(0.5, 0.5);
+            this.body.setOffset(this.P_X_OFFSET, this.P_HEIGHT * (1 - this.P_HFRAC));
             this.sideKicking = false;
             this.sideKickBox.setActive(false);
             // this.kickDirection = this.xDirection.NONE;
@@ -630,7 +530,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             && !this.laserPrep
             && !this.body.onFloor() && !this.sideKicking && !this.sliding && this.canLaser)
         {
-            this.anims.play('charge', true);
             console.log("Laser init working");
             this.laserPrep = true;
             this.ticksToLaser = this.ticks + this.L_LASER_WINDUP;
@@ -648,7 +547,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 // console.log("Laser prep working");
                 // And if down is held for long enough...
                 if (this.ticks >= this.ticksToLaser) {
-                    this.anims.play('lasering', true);
+                    // this.anims.play('lasering', true);
                     // Fire the laser downwards
                     if (this.body.velocity.y > 0) {
                         this.setAccelerationY(this.L_LASERACCEL_DOWN);
@@ -670,7 +569,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             else {
                 this.lasering = false;
                 this.laserPrep = false;
-                console.log("Laser ended");
                 this.canLaser = false;
                 if (this.laser != null) {
                     this.laser.destroy();
@@ -741,6 +639,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         {
             this.alignWithPlayer(this.flipPath, 0, 0);
             this.flipRotation();
+            // this.anims.play('flip');
             if (this.body.onFloor()) {
                 this.flipping = false;
                 this.pathIndex = 0;
@@ -765,7 +664,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.die();
         }
 
-        // CROUCH: Decrease height when crouching
+        // Decrease height when crouching
         if (this.crouching) {
             // console.log("Crouch size");
             this.body.setSize(Math.floor(this.P_WIDTH * this.P_WFRAC), this.P_HCROUCH, true);
@@ -775,15 +674,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             else {
                 // console.log("Crouch offset");
                 this.body.setOffset(this.P_X_OFFSET, this.P_HEIGHT - this.P_HCROUCH);
-                if (this.canDropKick) {
-                    this.anims.play('crouchprep', true);
-                    console.log("Play crouch-prep");
-                }
-                else {
-                    this.anims.play('crouch', true);
-                    console.log("Play crouch");
-                }
             }
+            // this.anims.play('crouch');
         }
         // else if (!this.solids.getTileAtWorldXY(this.body.position.x, this.body.position.y + this.P_HEIGHT, true).collideDown) {
         else if (!this.isAttacking() || this.dropKicking) {  
@@ -793,7 +685,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.body.setOffset(this.P_DROP_OFFSET, this.P_HEIGHT * (1 - this.P_HFRAC));
             }
             else {
-                // console.log("Standing offset");
+                // console.log("Crouch offset");
                 this.body.setOffset(this.P_X_OFFSET, this.P_HEIGHT * (1 - this.P_HFRAC));
             }
         }
@@ -877,7 +769,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.cursors.attack.isUp && (this.body.onFloor() || this.reboundLanded || this.ticks >= this.atkDelayEnd)) {
             this.canAttack = true;
             this.reboundLanded = false;
-            this.animsHoldFlag = false;
         }
 
         /** Handle invincibility timer after taking damage */
@@ -897,40 +788,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.healthBar.setHP(this.HP);
 
-        /** Reset sprite origin and animation */
-        if (!(this.isAttacking() || this.slowTime)) {
-            this.setOrigin(0.5, 0.5);
-            if (!this.crouching) {
-                this.body.setOffset(this.P_X_OFFSET, this.P_HEIGHT * (1 - this.P_HFRAC));
-            }
-            if (this.animsResetFlag) {
-                this.animsResetFlag = false;
-                if (this.cursors.down.isUp && (!this.animsHoldFlag || (this.animsHoldFlag && this.ticks >= this.atkDelayEnd))) {
-                    this.anims.play('turn', true);
-                    console.log("Animation reset");
-                    this.animsHoldFlag = false;
-                }
-                else if (this.laserPrep) {
-                    this.anims.play('charge', true);
-                    console.log("Laser charge");
-                    this.animsHoldFlag = false;
-                }
-            }
-        }
-        
-        if (!this.body.onFloor() && !(this.animsHoldFlag || this.animsResetFlag) && !this.laserPrep) {
-            if (this.body.velocity.y <= 0) {
-                console.log("Jump animation + " + (this.laserPrep));
-                this.anims.play("jump", true);
-            }
-            else {
-                this.anims.play("fall", true);
-            }
-        }
-        // this.body.setOffset(this.P_X_OFFSET, this.P_HEIGHT * (1 - this.P_HFRAC));
-
-        if (this.ticks <= this.hurtAnimEnd) {
-            this.anims.play('hurt', true);
+        /** Reset offset after doing everything else */
+        if (!this.isAttacking() && !this.isJumping && !this.crouching && !this.slowTime) {
+            this.anims.play('turn', true);
         }
     } // END update
 
@@ -941,7 +801,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * @return true if the player is side kicking, drop-kicking, sliding, flipping, or lasering.
      */
     isAttacking() {
-        // console.log("isAttacking: " + this.sideKicking || this.sliding || this.dropKicking || this.flipping || this.lasering);
+        console.log("isAttacking: " + this.sideKicking || this.sliding || this.dropKicking || this.flipping || this.lasering);
         return (this.sideKicking || this.sliding || this.dropKicking || this.flipping || this.lasering);
     }
 
@@ -950,7 +810,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * 
      */
     alignPlayerKick() {
-        this.animsResetFlag = true;
         console.log("running alignPlayerKick");
         this.kickDirection = this.xDirection.NONE;
         if (this.xFacing == this.xDirection.RIGHT || this.kickDirection == this.xDirection.RIGHT) {
@@ -969,7 +828,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * Realigns the player sprite when performing a slide.
      */
     alignPlayerSlide() {
-        this.animsResetFlag = true;
         console.log("running alignPlayerSlide");
         this.kickDirection = this.xDirection.NONE;
         if (this.xFacing == this.xDirection.RIGHT || this.kickDirection == this.xDirection.RIGHT) {
@@ -990,7 +848,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * Realigns the player sprite when performing a drop kick.
      */
      alignPlayerDropKick() {
-        this.animsResetFlag = true;
         console.log("running alignPlayerDropKick");
         if (this.slowTime) {
             console.log("In slow time");
@@ -1067,8 +924,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      */
     flipRotation() {
         this.flipReady = false;
-        this.animsResetFlag = true;
-        this.animsHoldFlag = true;
         if (this.kickDirection == this.xDirection.RIGHT) {
             // Counter-clockwise motion
             this.flipPath.setStartAngle(-(this.F_FLIP_BACK - 180));
@@ -1095,21 +950,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
         // Increment the path index until the hitbox reaches the end of the arc
         this.pathIndex = Math.min(this.pathIndex + this.F_FLIP_SPEED, 1);
-        if (this.pathIndex <= 0.2) {
-            this.anims.play('flip1', true);
-        }
-        else if (this.pathIndex <= 0.4) {
-            this.anims.play('flip2', true);
-        }
-        else if (this.pathIndex <= 0.6) {
-            this.anims.play('flip3', true);
-        }
-        else if (this.pathIndex <= 0.8) {
-            this.anims.play('flip4', true);
-        }
-        else if (this.pathIndex <= 1) {
-            this.anims.play('flip5', true);
-        }
         if (this.pathIndex >= 1) {
             this.flipping = false;
             this.pathIndex = 0;
@@ -1509,7 +1349,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.body.setVelocity(vx, vy);
             this.HP = Math.min(this.maxHP, this.HP - amount);
             this.ticksToDamageEnd = this.ticks + this.iFrames;
-            this.hurtAnimEnd = this.ticks + this.hurtAnimTicks;
         }
     }
 
