@@ -24,7 +24,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 import 'phaser';
 import Player from "../../Player";
@@ -45,7 +45,7 @@ import Comet from "../../Objects/Comet";
 var text1;
 var text2;
 var timer;
-// var this.solids; 
+// var this.solids;
 // var this.semisolids;
 var other; // for iterating through tiles
 var otherSpike;
@@ -76,19 +76,19 @@ export default class testCourse extends Phaser.Scene {
         // this.load.image('ground', 'assets/sprites/platform.png');
         //this.load.image('star', 'assets/images/star.png');
         // this.load.image('bomb', 'assets/bomb.png');
-        
+        this.load.spritesheet('coin', 'assets/sprites/coin.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('sky', 'assets/bg/sky.png');
         // this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
         // this.load.spritesheet('dude', 'dude2_hat.png', { frameWidth: 32, frameHeight: 48 });
 
         // To make a tile this.map, load the image, then load the .json file created in Tiled
         // this.load.image('tiles', 'assets/tilesets/ground_1x1.png');
-        
+
         this.load.tilemapTiledJSON('this.map', 'assets/courses/course1.json');
     }
 
-    
-    
+
+
     create ()
     {
         this.physics.world.gravity.set(0, 700);
@@ -103,7 +103,7 @@ export default class testCourse extends Phaser.Scene {
         this.map = this.make.tilemap({
             key: 'this.map',
         });
-        
+
 
         // Semisolid platforms can only be touched from above. Player can pass through them otherwise.
         // this.semiTiles = this.map.addTilesetImage('platformPack_tilesheet', 'semisolid');
@@ -118,16 +118,16 @@ export default class testCourse extends Phaser.Scene {
 
         this.terrainTiles = this.map.addTilesetImage('fantasy-tiles_32x32', 'tiles');
         this.solids = this.map.createLayer('terrain', this.terrainTiles, 0, 0);
-        
-        
+
+
         // Different tiles can have different properties and collision rules edited through Tiled.
 
-        
-    
+
+
         // Check to see if solid tiles have semisolid platforms to their right or left.
         // If so, give them collision on that side.
         this.solids.setCollisionByProperty({ solid: true }, true);
-        
+
 
         this.solids.forEachTile((tile) => {
             other = this.solids.getTileAt(tile.x + 1, tile.y);
@@ -173,7 +173,7 @@ export default class testCourse extends Phaser.Scene {
                 tile.faceBottom = true;
             }
         });
-        
+
         /** Debug graphics */
         // this.debugGraphics = this.add.graphics();
         // this.map.renderDebug(this.debugGraphics, {
@@ -190,10 +190,10 @@ export default class testCourse extends Phaser.Scene {
         // platforms.create(1000, 1550, 'ground').setScale(1).refreshBody();
         // platforms.create(4900, 1650, 'ground').setScale(6).refreshBody();
 
-        
 
-        
-        
+
+
+
         // this.spikeData = '' + this.spikesArray[0].body.position.x + ' ' + this.spikesArray[1].body.position.x;
         // this.spikeData = 'Too bad!';
 
@@ -207,7 +207,7 @@ export default class testCourse extends Phaser.Scene {
         this.enemies.defaults = {};
 
         this.enemyArray = this.map.createFromObjects('enemies', [
-            { 
+            {
                 // Find the gid by checking the firstgid value in the tileset as shown in the course's .json file
                 // then counting from the top-left to the bottom-right.
                 // The firstgid of 'objects' in course1.json is 65
@@ -234,15 +234,15 @@ export default class testCourse extends Phaser.Scene {
                 gid: 76,
                 classType: CometSpawner
             }
-        ]); 
-        
+        ]);
+
         this.enemies.addMultiple(this.enemyArray);
         // this.enemies.children.iterate(function (child) {
         //     child.body.setAllowGravity(true);
         //     child.body.setCollideWorldBounds(false);
         // });
         this.testEnemy = this.enemyArray[0];
-        
+
 
         /** Make the player character */
         // The object layer can be accessed as an array of objects. objects[0] is the first object in the 'spawnpoint' object layer.
@@ -250,7 +250,7 @@ export default class testCourse extends Phaser.Scene {
         var spawnY = this.map.getObjectLayer('spawnpoint').objects[0].y;
         // This thing is similar to an input listener.
         // controls = this.input.keyboard.createCursorKeys();
-        
+
         // Add the player controller
         this.controls = this.sys.game.globals.controls;
         this.controls.addControls(this);
@@ -258,7 +258,7 @@ export default class testCourse extends Phaser.Scene {
         // This line instantly sets up the player.
         this.player = new Player({scene:this, x:spawnX, y:spawnY}, this.solids, this.enemies, this.controls);
         //this.player.setTexture(this.textures.get('dude'));
-        
+
         // this.player = this.physics.add.sprite(spawnX, spawnY, 'dude');
 
         // Debug text
@@ -282,7 +282,7 @@ export default class testCourse extends Phaser.Scene {
             fill: '#ffffff'
         });
         propertiesText.setScrollFactor(0);
-        
+
         // Go to next scene!
         this.input.keyboard.on('keydown-Q', () => {
             this.scene.start('testCourse');
@@ -291,8 +291,8 @@ export default class testCourse extends Phaser.Scene {
         this.input.keyboard.on('keydown-ENTER', () => {
             if (!this.physics.world.isPaused)
                 this.physics.world.pause();
-                
-            else 
+
+            else
                 this.physics.world.resume();
         });
 
@@ -304,7 +304,7 @@ export default class testCourse extends Phaser.Scene {
         });
         this.tickCount = 0;
 
-        
+
         // this.player.setCollideWorldBounds(true);
     }
 
@@ -314,11 +314,11 @@ export default class testCourse extends Phaser.Scene {
     //     tickCount++;
     // }
 
-    
-    
+
+
     update (time, delta)
     {
-        
+
         if (!this.physics.world.isPaused) {
             this.player.update(time, delta);
             this.enemies.children.iterate(function(child) {
@@ -361,7 +361,7 @@ export default class testCourse extends Phaser.Scene {
             // player.setVelocityY(-4000);
         }
 
-        
+
         // Begin modified code from https://labs.phaser.io/edit.html?src=src/tilemap/tile%20properties.js
         var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main)
         var pointerTileX = this.map.worldToTileX(worldPoint.x);
@@ -373,7 +373,7 @@ export default class testCourse extends Phaser.Scene {
             if (tile)
             {
                 // Note: JSON.stringify will convert the object tile properties to a string
-                propertiesText.setText('!Properties: ' + JSON.stringify(tile.properties) + 
+                propertiesText.setText('!Properties: ' + JSON.stringify(tile.properties) +
                 '\n faceLeft: ' + tile.faceLeft + ' faceRight: ' + tile.faceRight + ' faceBottom: ' + tile.faceBottom +
                 '\n collideLeft: ' + tile.collideLeft + ' collideRight: ' + tile.collideRight + ' canCollide: ' + tile.canCollide + ' collideUp: ' + tile.collideUp + ' collideDown: ' + tile.collideDown +
                 '\n x: ' + tile.x + ' y: ' + tile.y +
@@ -382,21 +382,21 @@ export default class testCourse extends Phaser.Scene {
             }
         }
         // End code from https://labs.phaser.io/edit.html?src=src/tilemap/tile%20properties.js
-        
+
         // Debug text:
         // text1.setText('XVel: ' + this.player.body.velocity.x + ' PVEL_MAX: ' + this.player.PVEL_MAX + ' Max YVel: ' + maxYVel + ' Max XVel: ' + maxXVel + ' YAcc: ' + player.body.acceleration.y);
         // text2.setText(' XAcc: ' + this.player.body.acceleration.x + " \nkickAgain: " + kickAgain + " sideKick: " + sideKick + " lastKick_V: " + lastKick_V
-        //     + "\nstaticEdge: " + staticEdge + " kickEdge: " + kickEdge + " kickOK: " + kickOK + " reboundRan: " + reboundRan 
+        //     + "\nstaticEdge: " + staticEdge + " kickEdge: " + kickEdge + " kickOK: " + kickOK + " reboundRan: " + reboundRan
         //     + " \nenable: " + sideKickBox.body.enable  + ' collided: ' + collision + ' time: ' + time
         //     + "\nArrow keys to move left/right and jump. Press UP to jump. Press SPACE to do a side kick.");
         text1.setText('sliding: ' + this.player.sliding + ' slide time: ' + (time < this.player.ticksToSlideEnd) + ' kickdir: ' + this.player.kickDirection
-            + '\ncanDropkick: ' + this.player.canDropKick + ' canSlide: ' + this.player.canSlide + ' canJump: ' + this.player.canJump + ' dropkicking: ' + this.player.dropKicking 
+            + '\ncanDropkick: ' + this.player.canDropKick + ' canSlide: ' + this.player.canSlide + ' canJump: ' + this.player.canJump + ' dropkicking: ' + this.player.dropKicking
             + ' reboundRan: ' + this.player.reboundRan + ' kickOK: ' + this.player.kickOK + ' sideKicking: ' + this.player.sideKicking
             + '\n last tile: ' + this.player.tile.x
             + '\n kick: ' + this.player.sideKickBox.z + ' ' + this.player.dropKickBox.z
             + '\n list: ' + this.textures.getTextureKeys()
             + '\n tangent: ' + this.player.flipLastTan.x + ', ' + this.player.flipLastTan.y
-            + '\n drag: ' + this.player.body.drag.x 
+            + '\n drag: ' + this.player.body.drag.x
             + '\n angle: ' + this.player.flipAngle
             + '\n ticks: ' + this.player.ticks + ' time: ' + time
             + '\n maxY: ' + this.player.maxY
@@ -409,7 +409,7 @@ export default class testCourse extends Phaser.Scene {
             + "\n originX: " + this.player.originX
             + "\n hitbox offsetX: " + this.player.body.offset.x
             + "\n hitbox offsetY: " + this.player.body.offset.y
-            //+ '\n Tile coords: ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.x : null) 
+            //+ '\n Tile coords: ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.x : null)
             //+ ' ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.y : null) + ' ' + this.testEnemy.x
             + '\nArrow keys to move left and right. '
             + 'Press Z to jump. '
@@ -426,7 +426,7 @@ export default class testCourse extends Phaser.Scene {
             this.sys.game.globals.bgMusic = this.bgMusic;
         }
     } // END update
-    
+
     collided() {
         collision = true;
     }
