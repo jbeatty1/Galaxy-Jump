@@ -92,11 +92,18 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.image('cannon', 'assets/entities/cannon.png');
         this.load.spritesheet('laser', 'assets/entities/laserCannon.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('laserbeam', 'assets/entities/laserbeam.png')
+        this.load.spritesheet('laserdown', 'assets/entities/laserbeam.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('copter', 'assets/entities/copter.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('jumpster', 'assets/entities/jumpster.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('funbat', 'assets/entities/funbat.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('comet', 'assets/entities/comet.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('spikes', 'assets/entities/spikes.png');
+        this.load.image('heat1', 'assets/entities/warning.png');
+        this.load.image('heat2', 'assets/entities/warning2a.png');
+        this.load.spritesheet('coin', 'assets/items/coin.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('laserItem', 'assets/items/laserItem.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('doublejump', 'assets/items/doublejump.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('speedup', 'assets/items/speedup.png', { frameWidth: 32, frameHeight: 32 });
   }
 
   create () {
@@ -107,7 +114,7 @@ export default class PreloaderScene extends Phaser.Scene {
   }
 
   ready () {
-        this.scene.start('Title');
+        // this.scene.start('Title'); // Comment this line out to ensure everything is loaded. Keep it in to get to the title faster.
         this.readyCount++;
         if (this.readyCount === 2) {
           this.scene.start('Title');

@@ -112,6 +112,7 @@ export default class Jumpster extends Enemy {
                 this.sequence = this.seq.STOPPED;
             }
 
+            // Begin the sequence when this enemy is on screen and idling.
             if (super.isOnScreen() && this.alive && this.body.onFloor() && this.sequence === this.seq.STOPPED) {
                 this.beginJump();
                 //console.log("Starting");
@@ -129,6 +130,7 @@ export default class Jumpster extends Enemy {
                 this.jump();
                 //console.log("Jumped");
             }
+            // End of sequence
 
             if (this.facing == this.xDirection.LEFT && !this.body.onFloor()) {
                 this.setVelocityX(-this.moveSpeed);
@@ -149,13 +151,18 @@ export default class Jumpster extends Enemy {
         super.checkOutOfBounds();
     }
 
+    /**
+     * Begin the jump sequence.
+     * Set the timer for the wait sequence and update the state variable.
+     */
     beginJump() {
-        if (!this.jumpStarted) {
-            this.timer = this.ticks + this.waitTime;
-            this.sequence = this.seq.WAIT;
-        }
+        this.timer = this.ticks + this.waitTime;
+        this.sequence = this.seq.WAIT;
     }
 
+    /**
+     * Set a timer to play the idle animation before going to the charge animation.
+     */
     wait() {
         this.anims.play('idle', true);
         if (this.timer != -1 && this.ticks >= this.timer) {
@@ -165,6 +172,9 @@ export default class Jumpster extends Enemy {
         }
     }
 
+    /**
+     * Show the charge animation until it's time to jump, then jump.
+     */
     chargeSequence() {
         this.anims.play('prep', true);
         if (this.timer != -1 && this.ticks >= this.timer) {
@@ -173,12 +183,22 @@ export default class Jumpster extends Enemy {
         }
     }
 
+    /**
+     * Causes the enemy to jump.
+     */
     jump() {
         this.setVelocityY(this.jumpPower);
     }
 
     
 
+    /**
+     * Handles response to attacks.
+     * Knock this enemy away.
+     * 
+     * @param  {Number} vx the x velocity
+     * @param {Number} vy the y velocity
+     */
     hit(vx, vy) {
         super.hit(vx, vy);
         // console.log(vx);

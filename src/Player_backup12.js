@@ -1,14 +1,22 @@
 import 'phaser';
 import {checkWallManual} from './Objects/Enemy';
 import HealthBar from './HealthBar';
-import Item from './Objects/Item';
 /**
  * Class modeling the player character with all movement abilities.
  * This player can be added to any scene by creating a new Player object.
  * 
- *
+ * 
+ * Major changes:
+ * - Made it so the player's time variables are correctly saved if the game pauses
+ * - Added an option to jump after the dropkick. The game will temporarily go into
+ *      slow motion after dropkicking a wall. If you jump or wait too long, 
+ *      the game speed returns to normal.
+ * - Made it so you won't register two moves right after each other if you hold jump or attack.
+ * - Added laser move
+ * - Improved flip physics
+ * - Added damage and attacking system
  * @author Tony Imbesi
- * @version 4/8/2022
+ * @version 3/21/2022
  */
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     /**
@@ -26,7 +34,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.solids = solids;
         this.map = this.solids.tilemap;
         this.enemies = enemies;
-        this.items = this.scene.items;
         this.heat = this.scene.heat;
         //this.semisolids = config.solids;
 
@@ -58,16 +65,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.P_XVEL_SOFTMAX = 340; // Soft limit to max horizontal speed. Can be broken by various methods.
         this.P_XVEL_HARDMAX = 900; // Hard limit to max horizontal speed
         this.P_YVEL_HARDMAX = 900; // Hard limit to max vertical speed
-
-        this.P_SPEED = this.P_XVEL_SOFTMAX;
         // We can get the player's velocity at any time using player.body.velocity.x
         this.P_XACCEL = 1800; // Default horizontal acceleration
         this.P_JUMP = -400; // Jump velocity
         this.P_JUMP_ACCEL = -2750; // Jump acceleration. Vertical acceleration is unchanged by gravity but still affects vertical movement.
         this.P_JUMP_BRAKE = 800; // Cancel out jump acceleration at the end of a jump
         this.P_DRAG = 800; // Default drag
-        this.P_DRAG_SPEEDUP = this.P_DRAG * 1.5; // Ground drag with speedup powerup
-        this.P_DRAG_CURRENT = this.P_DRAG; // Current default grounded drag
         this.P_DRAG_FAST = this.P_DRAG / 2; // Drag when moving quickly
         this.P_DRAG_AIR = 80; // Air drag
         this.P_GRAV = 1000; // Player gravity. Total gravity = world gravity + player gravity
@@ -209,31 +212,17 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.laserPrep = false;
         this.lasering = false;
         this.canLaser = false;
-
-        this.canDoubleJump = false;
-        this.doubleJumpReady = false;
-
-        this.P_SPEEDUP = this.D_MINSPEED * 1.3;
         
         this.xFacing = 0;
         this.kickDirection = 0;
 
         // Items found:
-        this.coinCount = 0;
         this.foundLaser = false;
         this.foundDoubleJump = false;
         this.foundSpeedUp = false;
 
         // Healthbar variables:
         this.healthBar = new HealthBar(this.scene, this.maxHP);
-
-        // Item UI variables:
-        // Make a new UI class to display the coin count and powerups taken
-        this.itemsDisplay = this.scene.add.text(30, 50, '', {
-            fontSize: '20px',
-            fill: '#ffffff'
-        });
-        this.itemsDisplay.setScrollFactor(0);
 
         
 
@@ -251,7 +240,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.body.setSize(this.P_HITBOX_W, this.P_HITBOX_H, true); // false means it won't reposition to player's center
         this.body.setOffset(this.P_X_OFFSET, this.P_HEIGHT * (1 - this.P_HFRAC));
-        this.setDepth(2);
 
         this.setCollideWorldBounds(true); 
         
@@ -445,9 +433,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Heat collider
         this.heatCollider = this.scene.physics.add.overlap(this, this.heat, this.heatDmg, null, this);
 
-        // Items collider
-        this.itemsCollider = this.scene.physics.add.overlap(this, this.items, this.collectItem, null, this);
-
         // Colliders for each move. These are actually overlaps set to only detect overlap with solid terrain.
         // Extra note: Order matters. Each collision will be checked in order of addition, 
         // and the results of earlier colliders may affect the results of later colliders.
@@ -478,7 +463,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         /** Actions */
         
         /** Left and right movement, only when not crouching */
-        /** @Move */
         if (this.cursors.left.isDown && ((!this.crouching && !this.sliding) || !this.body.onFloor()))
         {
             this.moveX(-this.P_XACCEL);
@@ -526,7 +510,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        /** @Crouch */
+        /** Crouch */
         if ((this.cursors.down.isDown && this.body.onFloor()) || this.sliding)
         {
             this.crouching = true;
@@ -535,16 +519,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.crouching = false;
         }
 
-        /** @Jump */ 
+        /** Jump */ 
         if (this.cursors.pressed(this.cursors.jump)
-            && (this.canJump || this.doubleJumpReady) && !this.isJumping)
+            && this.canJump && !this.isJumping)
         {
-            console.log("Jump ran");
             this.isJumping = true;
-            if (this.doubleJumpReady) {
-                this.doubleJumpReady = false;
-                this.canDoubleJump = false;
-            }
             this.canJump = false;
             this.canKick = true;
             this.canLaser = true;
@@ -553,7 +532,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             // this.canSlide = false;
             this.setVelocityY(this.P_JUMP);
             this.ticksToJumpEnd = this.ticks + this.maxJumpTicks;
-
         }
         // Jump height increases with duration of button press
         if (this.cursors.jump.isDown && this.isJumping && this.ticks < this.ticksToJumpEnd)
@@ -565,10 +543,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (!this.cursors.jump.isDown || !this.isJumping || this.ticks >= this.ticksToJumpEnd)
         {
             this.isJumping = false;
-            if (this.canDoubleJump && !this.body.onFloor()) {
-                this.doubleJumpReady = true;
-                this.canDoubleJump = false;
-            }
             if (this.body.velocity.y < 0) {
                 this.setAccelerationY(this.P_JUMP_BRAKE);
                 this.maxY = this.body.position.y;
@@ -580,19 +554,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         /** Do a slide with attack on ground. You can still jump even if airborne after doing this move! */
-        /** @Slide */
         if (this.cursors.pressed(this.cursors.attack) && this.canAttack
             && ((this.cursors.down.isDown && !this.body.onFloor()) 
                 || (!(this.canDropKick && this.cursors.down.isDown) && this.body.onFloor()))
-            && this.canSlide && !this.sliding && this.xFacing !== this.xDirection.NONE && !this.dropKicking
-            && (this.cursors.left.isDown || this.cursors.right.isDown)) 
+            && this.canSlide && !this.sliding && this.xFacing !== this.xDirection.NONE && !this.dropKicking) 
         {
             this.canAttack = false;
             this.sliding = true;
             this.sideKicking = false;
             this.canKick = false;
             this.canSlide = false;
-            this.canDoubleJump = false;
 
             if (this.xFacing === this.xDirection.RIGHT)
                 this.body.setVelocityX(Math.max(this.body.velocity.x, this.S_SLIDE_XVEL));
@@ -627,7 +598,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
 
         /** Do a side kick with attack button in air */ 
-        /** @Kick @SideKick */
         if (this.cursors.pressed(this.cursors.attack) && this.canAttack
             && this.cursors.down.isUp && this.cursors.up.isUp
             && !(this.body.onFloor()) && !this.sideKicking && this.canKick && !this.sliding)
@@ -663,8 +633,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // }
 
         /** Laser move: Down + hold attack in the air */
-        /** @Laser */
-        if (this.foundLaser && this.cursors.down.isDown
+        if (this.cursors.down.isDown
             && !this.laserPrep
             && !this.body.onFloor() && !this.sideKicking && !this.sliding && this.canLaser)
         {
@@ -717,7 +686,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         /** Drop kick: Down + attack on the ground with some speed built up */
-        /** @DropKick */
         if (this.cursors.down.isDown && this.cursors.pressed(this.cursors.attack) && this.body.onFloor()
             && !this.sliding && this.xFacing !== this.xDirection.NONE
             && this.canDropKick && this.canAttack)
@@ -763,7 +731,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
         
         /** Do a flip by holding up while attempting a side kick */
-        /** @Flip */
         if (this.cursors.up.isDown && this.cursors.pressed(this.cursors.attack) && this.cursors.down.isUp
             && !(this.body.onFloor()) && !this.sideKicking && this.canKick && !this.sliding
             && this.canAttack)
@@ -840,7 +807,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         // IDLE: Player is slowed down more on the ground
         if (this.body.onFloor()){
-            if (this.canDropKick && !this.sliding && !this.foundSpeedUp) {
+            if (this.canDropKick && !this.sliding) {
                 this.setDragX(this.P_DRAG_FAST);
             }
             else {
@@ -852,9 +819,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.canLaser = true;
             this.isJumping = false;
             this.dropKickBounce = false;
-            if (this.foundDoubleJump) {
-                this.canDoubleJump = true;
-            }
         }
         else {
             this.setDragX(this.P_DRAG_AIR);
@@ -900,7 +864,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         /** Handle jump during slowdown */
-        /** @slowTime */
         if (this.slowTime) {
             this.alignPlayerDropKick();
             this.anims.play('post-dropkick', true);
@@ -939,6 +902,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.die();
         }
 
+        this.healthBar.setHP(this.HP);
+
         /** Reset sprite origin and animation */
         if (!(this.isAttacking() || this.slowTime)) {
             this.setOrigin(0.5, 0.5);
@@ -975,9 +940,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.anims.play('hurt', true);
         }
 
-        // Update player-based GUI elements
-        this.healthBar.setHP(this.HP);
-        this.updateItemDisplay();
         // Ensure that the heatDmg method only runs once per update
         this.heatTaken = false;
     } // END update
@@ -1068,8 +1030,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      {
          // pvx = player.body.velocity.x;
          // When the player is moving beyond top speed AND trying to move in the same direction as pvx, do not accelerate any more.
-         if ((-this.P_SPEED <= this.body.velocity.x && ax < 0) 
-             || (this.body.velocity.x <= this.P_SPEED && ax > 0)) {
+         if ((-this.P_XVEL_SOFTMAX <= this.body.velocity.x && ax < 0) 
+             || (this.body.velocity.x <= this.P_XVEL_SOFTMAX && ax > 0)) {
              this.setAccelerationX(ax);
              this.setDragX(this.P_DRAG);
          }
@@ -1402,7 +1364,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         }
         this.laser.setSize(this.L_WIDTH, newHeight);
         this.laser.body.setSize(this.L_WIDTH, newHeight);
-        this.laser.body.updateFromGameObject();
     }
 
     /**
@@ -1614,55 +1575,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 }
             }
         });
-    }
-
-    /**
-     * Handles the collection of items.
-     * If a coin is picked up, increment the coin counter.
-     * If a powerup is picked up, set the corresponding powerup flag and update the item UI.
-     * 
-     * @param {Player} body the player
-     * @param {Item} item the item collected
-     * 
-     * Based on code in Collectibles.js by Josiah Cornelius
-     */
-    collectItem(body, item) {
-        if (item.itemType == item.itemEnum.COIN) {
-            this.coinCount++;
-        }
-        if (item.itemType == item.itemEnum.LASER) {
-            this.foundLaser = true;
-        }
-        if (item.itemType == item.itemEnum.DOUBLEJUMP) {
-            this.foundDoubleJump = true;
-            this.canDoubleJump = true;
-        }
-        if (item.itemType == item.itemEnum.SPEEDUP) {
-            this.foundSpeedUp = true;
-            this.P_SPEED = this.P_SPEEDUP; // Increase speed
-        }
-
-        // Remove the item
-        item.destroy();
-    }
-
-    /**
-     * Update the item display based on the coin count and the three powerup flags.
-     */
-    updateItemDisplay() {
-        // Begin modified code from Josiah Cornelius's 'Collectibles.js'
-        var displayString = "Coins collected: " + this.coinCount;
-        if (this.foundLaser) {
-            displayString += "\n Found the LASER upgrade!";
-        }
-        if (this.foundDoubleJump) {
-            displayString += "\n Found the DOUBLE JUMP upgrade!";
-        }
-        if (this.foundSpeedUp) {
-            displayString += "\n Found the SPEED UP!";
-        }
-        this.itemsDisplay.setText(displayString);
-        // End modified code from Josiah Cornelius's 'Collectibles.js'
     }
 
     /**

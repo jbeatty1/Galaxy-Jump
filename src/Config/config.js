@@ -16,5 +16,6 @@ export default {
         arcade: {
             debug: true
         }
-    }
+    },
+    pixelArt: true
 };

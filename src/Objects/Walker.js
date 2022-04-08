@@ -50,7 +50,10 @@ export default class Walker extends Enemy {
     }
 
     update(time, delta) {
-        if (this.alive) {
+        // Check for on-screen presence to only start moving when the player approaches.
+        if (this.alive)
+            super.loadWhenOnScreen();
+        if (this.alive && this.loaded) {
             this.anims.play('move', true);
 
             if (this.facing == this.xDirection.LEFT) {
@@ -87,7 +90,13 @@ export default class Walker extends Enemy {
     
 
     
-
+    /**
+     * Handles response to attacks.
+     * Knock this enemy away.
+     * 
+     * @param  {Number} vx the x velocity
+     * @param {Number} vy the y velocity
+     */
     hit(vx, vy) {
         super.hit(vx, vy);
         // console.log(vx);

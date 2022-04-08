@@ -25,16 +25,18 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.map = this.scene.map;
         this.group = this.scene.enemies;
         this.cam = this.scene.cameras.main;
+        this.camBoundary = 32; // The enemy can load in using loadWhenOnScreen from this many pixels away outside the camera.
 
         // Basic variables:
         this.alive = true;
+        this.loaded = false;
         this.recoilVulnerable = true;
         this.contactDmg = true;
         this.damage = 0;
         this.recoilX = 200;
         this.recoilY = 200;
         this.heavy = false;
-        this.spawner = false;
+        this.spawner = false;   // This is only true for internal "spawner" entities.
         this.toDestroy = false;
 
         this.hitboxWidth = 32;
@@ -58,6 +60,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.body.setOffset(0, this.height - this.hitboxHeight);
         this.body.setAllowGravity(true);
         this.setGravityY(this.GRAVITY);
+        this.setDepth(2);
         
         this.INTERVAL = 16;
         this.ticks = 0;
@@ -120,19 +123,19 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
      */
      checkWallManual(direction, x, width, y, height, map) {
         var nextWall = null;
-        if (x == null) {
+        if (x == undefined) {
             x = this.body.x;
         }
-        if (y == null) {
+        if (y == undefined) {
             y = this.body.y;
         }
-        if (width == null) {
+        if (width == undefined) {
             width = this.body.width;
         }
-        if (height == null) {
+        if (height == undefined) {
             height = this.body.height;
         }
-        if (map == null) {
+        if (map == undefined) {
             map = this.map;
         }
         if (direction == this.xDirection.LEFT) {
@@ -149,17 +152,22 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
 
         if (nextWall != null && nextWall.properties.solid && !nextWall.properties.semisolid) {
-            // console.log(nextWall.x + ', ' + nextWall.y);
+            // console.log('Collided with: ' + nextWall.x + ', ' + nextWall.y + '; x: ' + x);
+            // if (direction == this.xDirection.LEFT) {
+            //     console.log("left")
+            // }
+            // else {
+            //     console.log("right");
+            // }
             return true;
         }
         else {
-            // if (direction == this.xDirection.LEFT)
-            //     if (nextWall!= null) {
-            //         //console.log('Tile at: ' + nextWall.x + ', ' + nextWall.y + ' is not solid');
-            //     }
-            //     else {
-            //         //console.log('nextWall is null');
-            //     }
+                // if (nextWall!= null) {
+                //     console.log('Tile at: ' + nextWall.x + ', ' + nextWall.y + ' is not solid');
+                // }
+                // else {
+                //     console.log('nextWall is null, x: ' + x);
+                // }
             return false;
         }
     }
@@ -214,6 +222,9 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
+    /**
+     * Turns the enemy around by changing its direction and flipping its graphics horizontally.
+     */
     turnAround() {
         if (this.facing == this.xDirection.LEFT) {
             this.facing = this.xDirection.RIGHT; 
@@ -236,7 +247,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (!this.recoilVulnerable)
             return;
 
-        console.log("ENEMY HIT");
+        // console.log("ENEMY HIT");
         this.alive = false;
         this.body.setVelocityX(vx);
         this.body.setVelocityY(vy);
@@ -251,26 +262,52 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     checkOutOfBounds() {
         if ((this.body.position.x + this.body.width < 0) || this.body.position.x > this.scene.WORLD_WIDTH
             || this.body.position.y > this.scene.WORLD_HEIGHT) {
+            this.alive = false;
             this.disableBody(true, true);
             // this.toDestroy = true;
         }
     }
 
+    /**
+     * Check for collision between this enemy and another enemy to knock out that enemy.
+     * 
+     * @param {Enemy} enemy1 the enemy calling this method
+     * @param {Enemy} enemy2 the enemy that has been collided with
+     */
     checkSelfCollision(enemy1, enemy2) {
         //console.log("Collision ran");
-        if (this.recoilVulnerable && this.alive && !enemy2.alive && !enemy2.spawner) {
-            console.log("SELF COLLISION");
-            console.log("enemy2 x: " + enemy2.x);
+        if (this.recoilVulnerable && this.alive && !enemy2.alive && enemy2 instanceof Enemy) {
+            // console.log("SELF COLLISION");
+            // console.log("enemy2 x: " + enemy2.x);
             this.hit(-enemy2.body.velocity.x * 0.5, -enemy2.body.velocity.y * 0.7);
             this.body.setBounce(1, 1);
             this.scene.physics.collide(this, enemy2);
         }
     }
 
+    /**
+     * Checks if the enemy is currently visible on screen.
+     * @returns {Boolean} true if the enemy is on screen, false otherwise
+     */
     isOnScreen() {
         var cameraBounds = new Phaser.Geom.Rectangle(this.cam.scrollX, this.cam.scrollY, this.cam.displayWidth, this.cam.displayHeight);
         //console.log(cameraBounds.x + ', ' + cameraBounds.width);
         return cameraBounds.contains(this.getCenter().x, this.getCenter().y);
+    }
+
+    /**
+     * Disables an enemy's body until it first appears near the screen.
+     * When this happens, the loaded flag is set to true.
+     */
+    loadWhenOnScreen() {
+        var cameraBounds = new Phaser.Geom.Rectangle(this.cam.scrollX - this.camBoundary, this.cam.scrollY - this.camBoundary, this.cam.displayWidth + this.camBoundary * 2, this.cam.displayHeight + this.camBoundary * 2);
+        if (cameraBounds.contains(this.getCenter().x, this.getCenter().y)) {
+            this.loaded = true;
+            this.enableBody();
+        }
+        else if (!this.loaded) {
+            this.disableBody();
+        }
     }
 
     /**
@@ -317,50 +354,50 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 * @param {Phaser.Tilemaps.Tilemap} map the tilemap
 */
 export function checkWallManual(direction, x, width, y, height, map) {
-   var nextWall = null;
-   var xDirection = {
-    LEFT: 0,
-    RIGHT: 1,
-    UP: 2,
-    DOWN: 3,
-    NONE: 4
-    };
-
-   if (direction == xDirection.LEFT) {
-       nextWall = map.getTileAtWorldXY(x - 1, y);
-   }
-   else if (direction == xDirection.RIGHT) {
-       nextWall = map.getTileAtWorldXY((x + width) + 1, y);
-   }
-   else if (direction == xDirection.UP) {
-       nextWall = map.getTileAtWorldXY(x, y - 1);
-   }
-   else if (direction == xDirection.DOWN) {
-       nextWall = map.getTileAtWorldXY(x, (y + height) + 1);
-   }
-
-   if (nextWall != null && nextWall.properties.solid && (!nextWall.properties.semisolid || direction == xDirection.DOWN)) {
-       console.log(nextWall.x + ', ' + nextWall.y);
-       return true;
-   }
-   else {
-       // if (direction == this.xDirection.LEFT)
-       //     if (nextWall!= null) {
-       //         //console.log('Tile at: ' + nextWall.x + ', ' + nextWall.y + ' is not solid');
-       //     }
-       //     else {
-       //         //console.log('nextWall is null');
-       //     }
-       return false;
-   }
-}
-
-/**
- * Check to see if this object is on screen.
- * @returns true if the object is on screen
- */
-export function isOnScreen() {
-    var cameraBounds = new Phaser.Geom.Rectangle(this.cam.scrollX, this.cam.scrollY, this.cam.displayWidth, this.cam.displayHeight);
-    //console.log(cameraBounds.x + ', ' + cameraBounds.width);
-    return cameraBounds.contains(this.getCenter().x, this.getCenter().y);
-}
+    var nextWall = null;
+    var xDirection = {
+     LEFT: 0,
+     RIGHT: 1,
+     UP: 2,
+     DOWN: 3,
+     NONE: 4
+     };
+ 
+    if (direction == xDirection.LEFT) {
+        nextWall = map.getTileAtWorldXY(x - 1, y);
+    }
+    else if (direction == xDirection.RIGHT) {
+        nextWall = map.getTileAtWorldXY((x + width) + 1, y);
+    }
+    else if (direction == xDirection.UP) {
+        nextWall = map.getTileAtWorldXY(x + width / 2, y - 1);
+    }
+    else if (direction == xDirection.DOWN) {
+        nextWall = map.getTileAtWorldXY(x + width / 2, (y + height) + 1);
+    }
+ 
+    if (nextWall != null && nextWall.properties.solid && (!nextWall.properties.semisolid || direction == xDirection.DOWN)) {
+        console.log(nextWall.x + ', ' + nextWall.y);
+        return true;
+    }
+    else {
+        // if (direction == this.xDirection.LEFT)
+        //     if (nextWall!= null) {
+        //         //console.log('Tile at: ' + nextWall.x + ', ' + nextWall.y + ' is not solid');
+        //     }
+        //     else {
+        //         //console.log('nextWall is null');
+        //     }
+        return false;
+    }
+ }
+ 
+ /**
+  * Check to see if this object is on screen.
+  * @returns true if the object is on screen
+  */
+ export function isOnScreen() {
+     var cameraBounds = new Phaser.Geom.Rectangle(this.cam.scrollX, this.cam.scrollY, this.cam.displayWidth, this.cam.displayHeight);
+     //console.log(cameraBounds.x + ', ' + cameraBounds.width);
+     return cameraBounds.contains(this.getCenter().x, this.getCenter().y);
+ }

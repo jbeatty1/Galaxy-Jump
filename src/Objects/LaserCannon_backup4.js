@@ -38,7 +38,7 @@ export default class Laser extends Enemy {
         this.ticks = 0;
         this.waitTime = 60 * this.INTERVAL;
         this.chargeTime = 120 * this.INTERVAL;
-        this.fireTime = 100 * this.INTERVAL;
+        this.fireTime = 90 * this.INTERVAL;
         this.seq = {
             WAIT: 0,
             CHARGE: 1,
@@ -54,7 +54,7 @@ export default class Laser extends Enemy {
         this.laserBaseX = 0;
         this.laserBaseY = 0;
         this.L_WIDTH = 32;
-        this.L_HEIGHT = 26;
+        this.L_HEIGHT = 16;
         this.L_OFFSET = 4;
         this.L_INCREMENT = 4;
         this.sprites = []; // Array used to draw and remove laser sprites
@@ -179,8 +179,7 @@ export default class Laser extends Enemy {
     fire() {
         this.anims.play('fire', true);
         this.drawLaser();
-        this.checkLaserCollision();
-        // console.log(this.oldWidth + 'vs. ' + this.laserWidth);
+        console.log(this.oldWidth + 'vs. ' + this.laserWidth);
         
         if (this.oldWidth != this.laserWidth || this.oldWidth == -1) {
             this.clearSprites();
@@ -189,7 +188,7 @@ export default class Laser extends Enemy {
             this.count++;
         }
         if (this.timer != -1 && this.ticks >= this.timer) {
-            // console.log("Laser was drawn " + this.count + " times");
+            console.log("Laser was drawn " + this.count + " times");
             this.resetState();
         }
     }
@@ -217,11 +216,10 @@ export default class Laser extends Enemy {
         this.laser = this.scene.add.rectangle(this.laserBaseX, this.laserBaseY, this.L_INCREMENT, this.L_HEIGHT);
         this.scene.physics.add.existing(this.laser);
         this.laser.setOrigin(0, 0.5);
-        // console.log("Original X: " + this.laser.x);
-        // console.log("Base X: " + this.laserBaseX);
+        console.log("Original X: " + this.laser.x);
+        console.log("Base X: " + this.laserBaseX);
         
         this.laser.body.setAllowGravity(false);
-        this.laser.setDepth(2);
     }
 
     /**
@@ -252,14 +250,13 @@ export default class Laser extends Enemy {
                 i++;
             }
             dx = newWidth;
-            this.laser.x -= dx;
             this.laser.setSize(newWidth, this.L_HEIGHT);
+            this.laser.x -= dx;
             // console.log("LEFT");
             // console.log('Width: ' + newWidth);
             // console.log('New X: ' + this.laser.x);
             // console.log('New DX: ' + dx);
             this.laser.body.setSize(newWidth, this.L_HEIGHT);
-            this.laser.body.updateFromGameObject();
         }
         else if (this.facing == this.xDirection.RIGHT) {
             // Extend right
@@ -280,13 +277,9 @@ export default class Laser extends Enemy {
             // console.log('Width: ' + newWidth);
             // console.log('New X: ' + this.laser.x);
             this.laser.body.setSize(newWidth, this.L_HEIGHT);
-            this.laser.body.updateFromGameObject();
         }
         this.laserWidth = newWidth;
-    }
-
-    checkLaserCollision() {
-        if (this.scene.physics.overlap(this.laser, this.scene.player) && this.laser.active)
+        if (this.scene.physics.overlap(this.laser, this.scene.player))
             this.scene.player.hurt(this.damage, this.recoilX, this.recoilY);
     }
 

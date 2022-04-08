@@ -1,0 +1,293 @@
+// Code from: https://labs.phaser.io/edit.html?src=src/physics/arcade/add%20body%20to%20shape.js
+// Modified by: Tony Imbesi
+// Version: 4/5/2022
+// I found out how to model the textures of the laser. Here, three unrelated tiles are used to model the three parts of the laser sprite.
+var config = {
+    type: Phaser.AUTO,
+    parent: 'phaser-example',
+    backgroundColor: '#0072bc',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: false
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+
+var cursors;
+var player;
+
+var game = new Phaser.Game(config);
+
+var count = 0;
+var inc = 4;
+var x1 = 400;
+var width1 = 0;
+var width2 = 0;
+var x2 = 400;
+var dx2 = 0;
+var height3 = 0;
+var height4 = 0;
+var y3 = 300;
+var dy4 = 0;
+var y4 = 300;
+var run = true;
+
+function preload() {
+    this.load.image('image1', 'assets/tilemaps/tiles/gridtiles.png');
+}
+
+function create ()
+{
+    text1 = this.add.text(10, 10, '', { fill: '#00ff00' });
+    player = this.add.rectangle(400, 300, 64, 64, 0xffffff);
+
+    this.physics.add.existing(player, false);
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    player.body.setCollideWorldBounds(true);
+
+    rect = this.add.rectangle(player.getCenter().x, player.getCenter().y, 32, 32, 0x553255);
+    rect.setOrigin(0, 0.5);
+    this.physics.add.existing(rect, false);
+    sprite1 = this.add.image
+
+    rect2 = this.add.rectangle(player.getCenter().x, player.getCenter().y, 32, 32, 0xbb32bb);
+    rect2.setOrigin(0, 0.5);
+    this.physics.add.existing(rect2, false);
+
+    rect3 = this.add.rectangle(player.getCenter().x, player.getCenter().y, 32, 32, 0x333233);
+    rect3.setOrigin(0.5, 0);
+    this.physics.add.existing(rect3, false);
+
+    rect4 = this.add.rectangle(player.getCenter().x, player.getCenter().y, 32, 32, 0x3200ff);
+    rect4.setOrigin(0.5, 0);
+    this.physics.add.existing(rect4, false);
+
+    test1 = this.add.rectangle(560, y3, 1, 64, 0xffffff);
+    test2 = this.add.rectangle(240, y3, 1, 64, 0xffffff);
+    test3 = this.add.rectangle(x1, 460, 64, 1, 0xffffff);
+    test4 = this.add.rectangle(x1, 140, 64, 1, 0xffffff);
+    test1.setDepth(1);
+    test2.setDepth(1);
+    test3.setDepth(1);
+    test4.setDepth(1);
+
+    this.input.on('pointerdown', (pointer) => {
+        rectProblem(this);
+    });
+}
+
+var sprites = [];
+function update ()
+{
+    var pointer = this.input.activePointer;
+
+    text1.setText([
+        'x: ' + pointer.worldX,
+        'y: ' + pointer.worldY,
+    ]);
+
+    player.body.setVelocity(0);
+
+    if (cursors.left.isDown)
+    {
+        test1.x += inc;
+        test2.x -= inc;
+        test3.y += inc;
+        test4.y -= inc;
+    }
+    else if (cursors.right.isDown)
+    {
+        test1.x -= inc;
+        test2.x += inc;
+        test3.y -= inc;
+        test4.y += inc;
+
+        if (test1.x < 432) {
+            test1.x = 432;
+            test2.x = 368;
+            test3.y = 332;
+            test4.y = 268;
+        }
+    }
+
+    // if (cursors.up.isDown)
+    // {
+    //     player.body.setVelocityY(-300);
+    // }
+    // else if (cursors.down.isDown)
+    // {
+    //     player.body.setVelocityY(300);
+    // }
+
+    if (cursors.space.isDown)
+    {
+        sprites.forEach(s => {
+            s.destroy();
+        });
+
+        rectProblem(this);
+    }
+    else {
+    }
+
+    
+}
+
+function rectProblem(scene) {
+        console.log("EXPANDING RECTANGLES");
+        run = false;
+        console.log("x2: " + x2);
+        console.log("y4: " + y4);
+        width1 = 0;
+        width2 = 0;
+        height3 = 0;
+        height4 = 0;
+
+        while (count < 100 && x1 + width1 < test1.x)
+        {
+            width1 += inc;
+
+            count++;
+        }
+        count = 0;
+
+        // Calculate width by subtracting dx2 with the same increment 
+        // until it hits the left wall.
+        dx2 = x1;
+        while (count < 100 && dx2 > test2.x)
+        {
+            width2 += inc;
+            dx2 -= inc;
+
+            count++;
+        }
+        count = 0;
+
+        while (count < 100 && y3 + height3 < test3.y)
+        {
+            height3 += inc;
+
+            count++;
+        }
+        count = 0;
+
+        dy4 = y3;
+        while (count < 100 && dy4 > test4.y)
+        {
+            height4 += inc;
+            dy4 -= inc;
+
+            count++;
+        }
+        count = 0;
+        dx2 = width2;
+        dy4 = height4;
+        
+        rect.x = x1;
+        console.log("Before1 OBJ: " + rect.x);
+        console.log("Before1 BODY: " + rect.body.x);
+        rect.setSize(width1, 32);
+        rect.body.setSize(width1, 32);
+        // rect.body.position.x = rect.getCenter().x;
+        console.log("After1 OBJ: " + rect.x);
+        console.log("After1 BODY: " + rect.body.x);
+        console.log("After1 BODY POS: " + rect.body.position.x);
+
+        rect2.x = x1;
+        console.log("Before2 OBJ:" + rect2.x);
+        console.log("Before2 BODY:" + rect2.body.x);
+        rect2.setSize(width2, 32);
+        rect2.x -= dx2;
+        rect2.body.setSize(width2, 32);
+        // rect2.body.position.x -= dx2;
+        console.log("After2 OBJ: " + rect2.x);
+        console.log("After2 BODY: " + rect2.body.x);
+        console.log("After2 BODY POS: " + rect2.body.position.x);
+        // console.log("x2: " + x2);
+
+        console.log("Before3: " + rect3.y);
+        rect3.setSize(32, height3);
+        rect3.body.setSize(32, height3);
+        // rect3.body.position.y = rect3.getCenter().y;
+        console.log("After3: " + rect3.y);
+
+        rect4.y = y3;
+        console.log("Before4 OBJ: " + rect4.y);
+        console.log("Before4 BODY: " + rect4.body.y);
+        rect4.setSize(32, height4);
+        rect4.y -= dy4;
+        rect4.body.setSize(32, height4);
+        // rect4.body.position.y = y4;
+        console.log("After4 OBJ: " + rect4.y);
+        console.log("After4 BODY: " + rect4.body.y);
+        // console.log("y4: " + y4);
+
+
+        // Load tile textures over rect1 (RIGHT)
+        var wTotal = width1;
+        var x = rect.x;
+        var y = y3 + 144;
+        var w3 = Math.min(32, width1);
+        w3 = Math.max(8, w3);
+        var sdx = x + wTotal - w3;
+        var s3 = scene.add.sprite(sdx - 64, y, 'image1');
+        s3.setOrigin(0,0.5);
+        s3.setCrop(96 - w3, 0, w3, 32);
+        s3.setDepth(3);
+        sprites.push(s3);
+        var w1 = 32;
+        var w2 = 32;
+        while (sdx > x + w1) {
+            sdx -= w2;
+            var s2 = scene.add.sprite(sdx - 32, y, 'image1');
+            s2.setOrigin(0,0.5);
+            s2.setCrop(32, 0, w2, 32);
+            s2.setDepth(1);
+            sprites.push(s2);
+        }
+        var s1 = scene.add.sprite(x, y, 'image1');
+        s1.setOrigin(0,0.5);
+        s1.setCrop(0, 0, w1, 32);
+        s1.setDepth(2);
+        sprites.push(s1);
+
+        // Load tile textures over rect2 (LEFT)
+        var wTotal = width2;
+        var x = rect2.x;
+        var y = y3 + 144;
+        var w3 = Math.min(32, wTotal);
+        w3 = Math.max(8, w3);
+        var sdx = x;
+        var s3 = scene.add.sprite(sdx - 64, y, 'image1');
+        s3.setOrigin(0,0.5);
+        s3.setCrop(s3.width - 96, 0, w3, 32);
+        s3.setFlipX(true);
+        s3.setDepth(3);
+        sprites.push(s3);
+        var w1 = 32 - (32 - w3);
+        var w2 = 32;
+        while (sdx < x + wTotal - w1) {
+            sdx += w2;
+            var s2 = scene.add.sprite(sdx - 32, y, 'image1');
+            s2.setOrigin(0,0.5);
+            s2.setCrop(32, 0, w2, 32);
+            s2.setDepth(1);
+            sprites.push(s2);
+        }
+        var s1 = scene.add.sprite(x + wTotal - w1, y, 'image1');
+        s1.setOrigin(0,0.5);
+        s1.setCrop(s1.width - 32, 0, w1, 32);
+        s1.setFlipX(true);
+        s1.setDepth(2);
+        sprites.push(s1);
+        console.log(rect2.width);
+        console.log(rect.width);
+    }

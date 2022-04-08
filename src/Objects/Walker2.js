@@ -50,7 +50,10 @@ export default class Walker2 extends Enemy {
     }
 
     update(time, delta) {
-        if (this.alive) {
+        // Check for on-screen presence to only start moving when the player approaches.
+        if (this.alive)
+            super.loadWhenOnScreen();
+        if (this.alive && this.loaded) {
             this.anims.play('move', true);
 
             if (this.facing == this.xDirection.LEFT) {

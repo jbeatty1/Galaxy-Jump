@@ -56,7 +56,10 @@ export default class Bat extends Enemy {
     }
     
     update(time, delta) {
-        if (this.alive) {
+        // Check for on-screen presence to only start moving when the player approaches.
+        if (this.alive)
+            super.loadWhenOnScreen();
+        if (this.alive && this.loaded) {
             /** Timer */
             // Only update if not paused
             this.ticks += delta;
@@ -71,9 +74,8 @@ export default class Bat extends Enemy {
                 this.body.velocity.rotate(angle);
                 this.ticks = 0;
             }
-        
-            this.checkOutOfBounds();
         }
+        super.checkOutOfBounds();
     }
 
     hit(vx, vy) {
