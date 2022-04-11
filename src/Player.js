@@ -2,10 +2,12 @@ import 'phaser';
 import {checkWallManual} from './Objects/Enemy';
 import HealthBar from './HealthBar';
 import Item from './Objects/Item';
+import PlayerController from './PlayerController';
+
 /**
  * Class modeling the player character with all movement abilities.
  * This player can be added to any scene by creating a new Player object.
- * 
+ *
  *
  * @author Tony Imbesi
  * @version 4/8/2022
@@ -14,7 +16,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     /**
      * Sets up the player with all movement abilities.
      * The player will appear at the given x and y positions.
-     * 
+     *
      * @param {Object} config the config object with the current scene, x, and y in that order
      * @param {Phaser.Tilemaps.TilemapLayer} solids the tile layer for solid terrain
      * @param {Phaser.Tilemaps.TilemapLayer} semisolids the tile layer for semisolid platforms
@@ -30,19 +32,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.heat = this.scene.heat;
         //this.semisolids = config.solids;
 
-        
+
         // To load the texture properly, you have to add this subclass to both the 'normal' scene and the 'physics' scene.
         // I found this out by looking at this example code: https://labs.phaser.io/edit.html?src=src/physics/arcade/extending%20arcade%20sprite.js
         this.scene.add.existing(this);
         this.scene.physics.add.existing(this);
-        
+
         this.textureKey = this.texture.key;
 
         /** Start of player variables */
-    
+
         this.INTERVAL = 16; // Number of ticks in milliseconds to multiply other timer variables
         this.ticks = 0;
-        
+
 
         // Player's appearance:
         this.P_WIDTH = 64; // Width of the sprite
@@ -74,10 +76,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.P_BOUNCE = 0;
         this.P_DELAY = 150; // Delay in milliseconds before player can input another attack
 
-        
+
 
         // Constants determining action attributes:
-        
+
         // Side kick constants:
         this.K_KICK_VEL = 230; // Base velocity from kicking an object
         this.K_KICK_V_STANDING = 300; // Minimum rebound velocity
@@ -118,7 +120,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Laser constants:
         this.L_LASER_WINDUP = 10 * this.INTERVAL; // Ticks before laser move happens
         this.L_LASER_MAX = 50 * this.INTERVAL; // Max number of ticks you can sustain the laser for
-        
+
         this.L_LASERACCEL = -2300;   // Vertical boost from lasering
         this.L_YVEL_MAX = -500;
         this.L_LASERACCEL_UP = -500; // Laser acceleration when going upwards very fast
@@ -214,7 +216,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.doubleJumpReady = false;
 
         this.P_SPEEDUP = this.D_MINSPEED * 1.3;
-        
+
         this.xFacing = 0;
         this.kickDirection = 0;
 
@@ -235,7 +237,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         });
         this.itemsDisplay.setScrollFactor(0);
 
-        
+
 
         /** End of player variables */
 
@@ -253,9 +255,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.setOffset(this.P_X_OFFSET, this.P_HEIGHT * (1 - this.P_HFRAC));
         this.setDepth(2);
 
-        this.setCollideWorldBounds(true); 
-        
-        
+        this.setCollideWorldBounds(true);
+
+
         // Player animations. The keys can be remade using an enumeration.
         // Move animation for premade "dude" asset
         this.anims.create({
@@ -305,6 +307,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             frames: [ { key: 'dude', frame: 18 } ],  // Change frame number if using a different player sprite
             frameRate: 20
         });
+
 
         this.anims.create({
             key: 'dropkick',
@@ -403,7 +406,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.slideBox = this.scene.add.rectangle(-10, -10, this.S_SLIDE_W, this.S_SLIDE_H);
         this.dropKickBox = this.scene.add.rectangle(-10,-10, this.D_DROPKICK_W, this.D_DROPKICK_H);
         this.flipBox = this.scene.add.rectangle(-10, -10 , this.F_FLIP_W, this.F_FLIP_H);
-        
+
         // Begin modified code from https://labs.phaser.io/edit.html?src=src/paths/circle%20path.js
         // this.flipPath = new Phaser.Curves.Path();
         this.flipPath = new Phaser.Curves.Ellipse(-10, -10, this.F_FLIP_RADIUS, this.F_FLIP_RADIUS, this.F_FLIP_FRONT, this.F_FLIP_BACK);
@@ -418,7 +421,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.pathIndex = 0;
         // End modified code from https://labs.phaser.io/edit.html?src=src/physics/arcade/body%20on%20a%20path.js
 
-        
+
 
         this.pHitboxes.add(this.sideKickBox);
         this.pHitboxes.add(this.slideBox);
@@ -449,7 +452,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.itemsCollider = this.scene.physics.add.overlap(this, this.items, this.collectItem, null, this);
 
         // Colliders for each move. These are actually overlaps set to only detect overlap with solid terrain.
-        // Extra note: Order matters. Each collision will be checked in order of addition, 
+        // Extra note: Order matters. Each collision will be checked in order of addition,
         // and the results of earlier colliders may affect the results of later colliders.
         // attackCollider comes first because later colliders disable attack hitboxes
         this.attackCollider = this.scene.physics.add.overlap(this.pHitboxes, this.enemies, this.attack, null, this);
@@ -476,18 +479,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.ticks += delta;
 
         /** Actions */
-        
+
         /** Left and right movement, only when not crouching */
         /** @Move */
         if (this.cursors.left.isDown && ((!this.crouching && !this.sliding) || !this.body.onFloor()))
         {
             this.moveX(-this.P_XACCEL);
-            
+
         }
         else if (this.cursors.right.isDown && ((!this.crouching && !this.sliding) || !this.body.onFloor()))
         {
             this.moveX(this.P_XACCEL);
-            
+
         }
         // Else: no movement. Set acceleration to 0 and decrease speed with friction/drag.
         else
@@ -535,7 +538,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.crouching = false;
         }
 
-        /** @Jump */ 
+        /** @Jump */
         if (this.cursors.pressed(this.cursors.jump)
             && (this.canJump || this.doubleJumpReady) && !this.isJumping)
         {
@@ -582,10 +585,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         /** Do a slide with attack on ground. You can still jump even if airborne after doing this move! */
         /** @Slide */
         if (this.cursors.pressed(this.cursors.attack) && this.canAttack
-            && ((this.cursors.down.isDown && !this.body.onFloor()) 
+            && ((this.cursors.down.isDown && !this.body.onFloor())
                 || (!(this.canDropKick && this.cursors.down.isDown) && this.body.onFloor()))
             && this.canSlide && !this.sliding && this.xFacing !== this.xDirection.NONE && !this.dropKicking
-            && (this.cursors.left.isDown || this.cursors.right.isDown)) 
+            && (this.cursors.left.isDown || this.cursors.right.isDown))
         {
             this.canAttack = false;
             this.sliding = true;
@@ -611,7 +614,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.crouching = true;
             this.anims.play('slide');
             this.alignWithPlayer(this.slideBox, this.S_slideXOffset, this.S_slideYOffset);
-            
+
             // if (this.body.onFloor())
             // {
             //     this.sliding = false;
@@ -621,12 +624,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             // }
         }
         else {
-            this.sliding = false;  
+            this.sliding = false;
             this.slideBox.setActive(false);
         }
-        
 
-        /** Do a side kick with attack button in air */ 
+
+        /** Do a side kick with attack button in air */
         /** @Kick @SideKick */
         if (this.cursors.pressed(this.cursors.attack) && this.canAttack
             && this.cursors.down.isUp && this.cursors.up.isUp
@@ -679,7 +682,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.laserPrep) {
             // If player is holding down, in air, and not doing anything else...
             if (this.cursors.down.isDown
-                && !this.body.onFloor() 
+                && !this.body.onFloor()
                 && (!this.sideKicking && !this.sliding && !this.dropKicking && !this.flipping)
                 && this.ticks < this.ticksToLaserEnd)
             {
@@ -697,7 +700,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                     else {
                         this.setAccelerationY(this.L_LASERACCEL_UP);
                     }
-                    
+
                     // console.log(this.body.acceleration.y);
                     this.laserSetup();
                     this.canJump = false;
@@ -748,9 +751,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             // this.crouching = false;
             this.canKick = false;
             this.anims.play('dropkick', true);
-            
+
             this.alignWithPlayer(this.dropKickBox, this.D_dropXOffset, this.D_dropYOffset);
-            
+
             if (this.body.onFloor() && this.ticks > this.dropKickDelay)
             {
                 this.dropKicking = false;
@@ -761,7 +764,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.ticks >= this.ticksToDropKickEnd) {
             this.dropKicking = false;
         }
-        
+
         /** Do a flip by holding up while attempting a side kick */
         /** @Flip */
         if (this.cursors.up.isDown && this.cursors.pressed(this.cursors.attack) && this.cursors.down.isUp
@@ -802,7 +805,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.recover(this.recoveryRate);
 
         if (this.HP <= 0) {
-            this.die();
+        this.die();
         }
 
         // CROUCH: Decrease height when crouching
@@ -826,7 +829,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
         // else if (!this.solids.getTileAtWorldXY(this.body.position.x, this.body.position.y + this.P_HEIGHT, true).collideDown) {
-        else if (!this.isAttacking() || this.dropKicking) {  
+        else if (!this.isAttacking() || this.dropKicking) {
             // Reset height when not crouching and not doing any attack other than dropkick
             this.body.setSize(Math.floor(this.P_WIDTH * this.P_WFRAC), Math.floor(this.P_HEIGHT * this.P_HFRAC), true); // false means it won't reposition to player's center
             if (this.dropKicking || this.slowTime) {
@@ -959,7 +962,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 }
             }
         }
-        
+
         if (!this.body.onFloor() && !(this.animsHoldFlag || this.animsResetFlag) && !this.laserPrep) {
             if (this.body.velocity.y <= 0) {
                 console.log("Jump animation + " + (this.laserPrep));
@@ -995,7 +998,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     /**
      * Realigns the player sprite when performing a side kick.
-     * 
+     *
      */
     alignPlayerKick() {
         this.animsResetFlag = true;
@@ -1060,7 +1063,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     /**
     * Moves left or right by changing the player's acceleration.
-    * 
+    *
     * @param ax the left or right acceleration. Negative = left, positive = right.
     *
     */
@@ -1068,7 +1071,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      {
          // pvx = player.body.velocity.x;
          // When the player is moving beyond top speed AND trying to move in the same direction as pvx, do not accelerate any more.
-         if ((-this.P_SPEED <= this.body.velocity.x && ax < 0) 
+         if ((-this.P_SPEED <= this.body.velocity.x && ax < 0)
              || (this.body.velocity.x <= this.P_SPEED && ax > 0)) {
              this.setAccelerationX(ax);
              this.setDragX(this.P_DRAG);
@@ -1078,10 +1081,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
              this.setDragX(this.P_DRAG_FAST);
          }
      } // END move
- 
+
      /**
      * Aligns a hitbox with the player.
-     * 
+     *
      * @param obj the rectangle
      * @param xDiff the x offset: positive positions it in front of player
      * @param yDiff the y offset: negative is up
@@ -1121,7 +1124,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             // Counter-clockwise motion
             this.flipPath.setStartAngle(-(this.F_FLIP_BACK - 180));
             this.flipPath.setEndAngle(-(this.F_FLIP_FRONT - 180));
-            
+
             // Get the next point and tangent
             this.flipPath.getPoint(1 - this.pathIndex, this.pathVector);
             this.flipLastTan = this.flipPath.getTangent(1 - this.pathIndex, this.flipLastTan);
@@ -1138,9 +1141,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Calculate the angle in radians from the unit tangent vector acquired from .getTangent method
         this.flipAngle = Math.atan(this.flipLastTan.y / this.flipLastTan.x);
-        
+
         this.flipBox.setPosition(this.pathVector.x, this.pathVector.y);
-        
+
         // Increment the path index until the hitbox reaches the end of the arc
         this.pathIndex = Math.min(this.pathIndex + this.F_FLIP_SPEED, 1);
         if (this.pathIndex <= 0.2) {
@@ -1168,7 +1171,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Set to default kick vector at angle of 0
         this.flipReboundVec.set(0, -this.F_FLIP_VEL);
         // Rotate by the angle modified by an offset
-        
+
         //var angleOffset = 0;
         this.flipReboundVec.set(this.F_FLIP_VEL, 0);
         // Rotate by the angle
@@ -1190,20 +1193,20 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         //this.flipAngle += angleOffset;
         this.flipReady = true;
     }
- 
+
     /**
      * Makes the player rebound off of an object.
-     * 
+     *
      * @param hitbox the hitbox from a player action
      * @param tile the tile overlapped by the hitbox
      */
     // If a function is called in an overlap, you can pass a reference to the individual objects involved in the overlap.
     kickRebound(hitbox, tile)
     {
-        
+
         // The top and bottom of the hitbox can be higher or lower than the player hitbox.
         // The rebound should only happen if it hits the corner or edge of a surface AND if that surface isn't semisolid.
-        
+
         // if ((xFacing == xDirection.LEFT && pHitboxes.body.blocked.left)
         //     || (xFacing == xDirection.RIGHT && pHitboxes.body.blocked.right)) {
         //     kickOK = true;
@@ -1253,12 +1256,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     /**
      * Special rebound function for dropkicking into an object.
-     * 
+     *
      * @param hitbox the hitbox from a player action
      * @param tile the tile overlapped by the hitbox
      */
     dropKickRebound(hitbox, tile) {
-        
+
         if (this.dropKicking && !this.sideKicking && this.verifyRebound(hitbox, tile)) {
             this.dropKickSlowdown();
             this.setVelocity(-this.body.velocity.x * 0.5, this.D_DROPKICK_Y);
@@ -1285,7 +1288,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     /**
      * Special rebound function for flipping into an object.
-     * 
+     *
      * @param hitbox the hitbox from a player action
      * @param tile the tile overlapped by the hitbox
      */
@@ -1327,11 +1330,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         return true;
     }
- 
-    /** 
+
+    /**
      * This method verifies the tile overlapped by a kick hitbox
      * to make sure you should actually be able to boost off of it.
-     * 
+     *
      * @param {Phaser.GameObjects.Rectangle} hitbox the hitbox
      * @param {Phaser.Tilemaps.Tile} tile the tile
      * @returns true if the hitbox is against a solid wall or corner, false otherwise
@@ -1347,7 +1350,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             if (frontTile != null) {
                 console.log(frontTile.x + ',' + frontTile.y);
             }
-            if (this.kickEdge > this.staticEdge 
+            if (this.kickEdge > this.staticEdge
                 && ((frontTile == null || !frontTile.properties.semisolid) || this.body.y + this.body.height > tile.pixelY)) {
                 return true;
                 // reboundRan++;
@@ -1360,7 +1363,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             if (frontTile != null) {
                 console.log(frontTile.x + ',' + frontTile.y);
             }
-            if (this.kickEdge < this.staticEdge 
+            if (this.kickEdge < this.staticEdge
                 && ((frontTile == null || !frontTile.properties.semisolid) || this.body.y + this.body.height > tile.pixelY)) {
                 return true;
                 // reboundRan++;
@@ -1377,7 +1380,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.laser.setOrigin(0.5, 0);
             //var laser = new Phaser.GameObjects.Rectangle(this.scene, 1, 2, 3, 4);
             this.pHitboxes.add(this.laser);
-            
+
             this.laser.body.setAllowGravity(false);
         }
     }
@@ -1389,7 +1392,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Extend down
         this.alignWithPlayer(this.laser, 0, -2);
         var newHeight = this.L_HEIGHT;
-        
+
         while (i < 200 && !checkWallManual(this.xDirection.DOWN, this.laser.body.x, this.laser.body.width, this.laser.body.position.y, newHeight, this.map)) {
             // console.log(!checkWallManual(this.xDirection.DOWN, this.laser.body.position.x, this.laser.body.width, this.laser.body.position.y, this.laser.body.height, this.map));
             newHeight += this.L_INCREMENT;
@@ -1397,7 +1400,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             // this.laserMask.setSize(this.laser.body.width + this.L_INCREMENT, this.laser.body.height);
             // console.log(this.laser.body.height);
             // this.laserMask.x -= this.L_INCREMENT / 2;
-            
+
             i++;
         }
         this.laser.setSize(this.L_WIDTH, newHeight);
@@ -1406,7 +1409,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
-     * 
+     *
      * @param {Phaser.GameObjects.Rectangle} pHitbox the hitbox
      * @param {Walker} enemy the enemy
      */
@@ -1470,7 +1473,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     /**
      * Breaks soft tiles when they are hit by normal attacks.
      * Soft tiles have the "soft" property checked in Tiled.
-     * 
+     *
      * @param {*} pHitboxes hitbox unused
      * @param {Phaser.Tilemaps.Tile} tile the tile
      */
@@ -1492,14 +1495,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
             // Now remove the tile
             this.solids.removeTileAt(tile.x, tile.y);
-            
+
             // TODO: Additional particle effects
         }
     }
 
     /**
      * Handles contact with spikes.
-     * 
+     *
      * @param {Player} body the player
      * @param {Phaser.Tilemaps.Tile} spike the spike tile collided with
      */
@@ -1509,7 +1512,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     /**
      * Handles contact with enemies.
-     * 
+     *
      * @param {Player} body the player
      * @param {Enemy} enemy the enemy touched by the player
      */
@@ -1521,7 +1524,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     /**
      * Handles contact with heat tiles.
-     * 
+     *
      * @param {Player} body the player
      * @param {Phaser.Tilemaps.Tile} spike the spike tile collided with
      */
@@ -1552,7 +1555,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * Deals an amount of damage, sets invulnerability timer, and knocks the player back.
      * The horizontal recoil is in the opposite direction of the player's 'facing' direction.
      * The player will get shot downward if you hit a ceiling or upward if you hit a floor.
-     * 
+     *
      * @param {number} amount the amount of health to subtract. Must be positive.
      * @param {number} recoilX the amount of horizontal recoil
      * @param {number} recoilY the amount of vertical recoil.
@@ -1580,7 +1583,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.hurtRan++;
                 vy = Math.max(Math.abs(this.body.velocity.y), recoilY * 0.5);
             }
-            
+
             this.resetState();
             this.body.setVelocity(vx, vy);
             this.HP = Math.min(this.maxHP, this.HP - amount);
@@ -1591,19 +1594,33 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     /**
      * Kills off the player and returns them to the spawnpoint or last checkpoint.
+     *
      */
     die() {
-        this.scene.scene.restart(); // Change functionality later
+        this.anims.play('hurt', true);
+        //the slide animation looks like the player died
+        this.anims.play('slide', true);
+        this.cursors.left = false
+        this.cursors.right = false;
+        this.cursors.up = false;
+        this.cursors.down = false;
+        this.canJump = false;
+        this.jump = false;
+        this.maxJumpTicks = false;
+        this.P_JUMP = false;
+       setTimeout(() => {this.scene.scene.restart(); // Change functionality later
+    }, 2000);
+
     }
 
     /**
      * Hits enemies standing on top of a certain tile.
-     * 
+     *
      * @param {Phaser.Tilemaps.Tile} tile the tile
      */
     hitEnemyOnTile(tile) {
         this.enemies.getChildren().forEach(e => {
-            if (e.alive && e.body.enable) { 
+            if (e.alive && e.body.enable) {
                 if (this.solids.getTileAtWorldXY(e.x, e.y + e.body.height + 1) === tile) {
                     // || this.solids.getTileAtWorldXY(e.x - 1, e.y) === tile
                     // || this.solids.getTileAtWorldXY(e.x + e.body.width + 1, e.y) === tile) {
@@ -1620,10 +1637,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * Handles the collection of items.
      * If a coin is picked up, increment the coin counter.
      * If a powerup is picked up, set the corresponding powerup flag and update the item UI.
-     * 
+     *
      * @param {Player} body the player
      * @param {Item} item the item collected
-     * 
+     *
      * Based on code in Collectibles.js by Josiah Cornelius
      */
     collectItem(body, item) {
