@@ -37,19 +37,19 @@ export default class OptionsScene extends Phaser.Scene {
 
     this.menuButton = new Button(this, 400, 500, 'blueButton1', 'blueButton2', 'Menu', 'Title');
 
-    this.updateAudio();
+    // this.updateAudio();
   }
 
   updateAudio() {
     if (this.model.musicOn === false) {
         this.musicButton.setTexture('box');
-        this.sys.game.globals.bgMusic.stop();
+        this.sys.game.globals.bgMusic.pause();
         this.model.bgMusicPlaying = false;
     }
     else {
         this.musicButton.setTexture('checkedBox');
         if (this.model.bgMusicPlaying === false) {
-            this.sys.game.globals.bgMusic.play();
+            this.sys.game.globals.bgMusic.resume();
             this.model.bgMusicPlaying = true;
         }
     }

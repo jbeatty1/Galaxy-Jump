@@ -54,7 +54,7 @@ export default class Laser extends Enemy {
         this.laserBaseX = 0;
         this.laserBaseY = 0;
         this.L_WIDTH = 32;
-        this.L_HEIGHT = 26;
+        this.L_HEIGHT = 22;
         this.L_OFFSET = 4;
         this.L_INCREMENT = 4;
         this.sprites = []; // Array used to draw and remove laser sprites
