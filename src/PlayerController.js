@@ -55,8 +55,9 @@ export default class PlayerController {
         this.down = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
         this.jump = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
         this.attack = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
-        this.pause = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+        this.pause = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
         this.shift = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.mute = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
         // End modified code from https://labs.phaser.io/edit.html?src=src/input/keyboard/add%20key.js
     }
 

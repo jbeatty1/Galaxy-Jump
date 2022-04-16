@@ -10,10 +10,12 @@ import OptionsScene from './Scenes/OptionsScene';
 import CreditsScene from './Scenes/CreditsScene';
 import testCourse from './Scenes/Courses/testCourse';
 import testCourse2 from './Scenes/Courses/testCourse2';
+import KeybindingScene from './Scenes/KeybindingScene';
+import PauseScene from './Scenes/PauseScene';
 
 import Model from './Model';
 import PlayerController from './PlayerController';
-import KeybindingScene from './Scenes/KeybindingScene';
+
 
 /*
     This will construct a new Phaser.Game with the config from config.js,
@@ -38,9 +40,12 @@ class Game extends Phaser.Game {
     this.scene.add('Options', OptionsScene);
     this.scene.add('Credits', CreditsScene);
     this.scene.add('Game', GameScene);
+    this.scene.add('Keybinding', KeybindingScene);
+    this.scene.add('Pause', PauseScene);
+
     this.scene.add('testCourse', testCourse);
     this.scene.add('testCourse2', testCourse2);
-    this.scene.add('Keybinding',KeybindingScene);
+    
     this.scene.start('Boot');
   }
 }

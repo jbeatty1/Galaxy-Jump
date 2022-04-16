@@ -12,6 +12,7 @@ export default class Laser extends Enemy {
         // Basic construction function calls
         super(scene, x, y, key);
         this.setTexture('laser');
+        this.model = this.scene.model;
         
         // Basic variables:
         this.alive = true;
@@ -54,7 +55,7 @@ export default class Laser extends Enemy {
         this.laserBaseX = 0;
         this.laserBaseY = 0;
         this.L_WIDTH = 32;
-        this.L_HEIGHT = 26;
+        this.L_HEIGHT = 22;
         this.L_OFFSET = 4;
         this.L_INCREMENT = 4;
         this.sprites = []; // Array used to draw and remove laser sprites
@@ -87,6 +88,11 @@ export default class Laser extends Enemy {
             frameRate: 10,
             repeat: -1
         });
+
+        this.sfxLaserCharge = this.scene.sound.add('enemyLaserCharge', { volume: 0.25, loop: false });
+        // this.sfxLaserCharge.addMarker({ name: 'chargeLoop', start: 1 });
+        this.sfxLaserFire = this.scene.sound.add('enemyLaserFire', { volume: 0.25, loop: false });
+        this.sfxLaserFiring = this.scene.sound.add('enemyLaserFiring', { volume: 0.25, loop: true });
 
         this.init = false;
     }
@@ -165,10 +171,18 @@ export default class Laser extends Enemy {
      */
     chargeSequence() {
         this.anims.play('charge', true);
+        if (this.model.soundOn === true && !this.sfxLaserCharge.isPlaying) {
+            this.sfxLaserCharge.play();
+        }
         if (this.timer != -1 && this.ticks >= this.timer) {
             this.timer = this.ticks + this.fireTime;
             this.sequence = this.seq.FIRE;
             this.count = 0;
+            this.sfxLaserCharge.stop();
+            if (this.model.soundOn === true && !this.sfxLaserFiring.isPlaying) {
+                this.sfxLaserFire.play();
+                this.sfxLaserFiring.play();
+            }
             this.laserSetup();
         }
     }
@@ -371,6 +385,8 @@ export default class Laser extends Enemy {
         //     this.laserMask.destroy();
         this.clearSprites();
         this.anims.play('idle', true);
+        this.sfxLaserFiring.stop();
+        this.sfxLaserCharge.stop();
         this.timer = -1;
         this.oldWidth = -1;
         this.sequence = this.seq.STOPPED;

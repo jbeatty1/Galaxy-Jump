@@ -1,10 +1,12 @@
-// Code from https://phasertutorials.com/creating-a-phaser-3-template-part-3/
+// Begin modified code from https://phasertutorials.com/creating-a-phaser-3-template-part-3/
 
 import 'phaser';
 
 /**
   The Preloader scene will show the loading graphics and
   load additional assets.
+
+  Modified by Tony Imbesi, 4/12/2022
 */
 export default class PreloaderScene extends Phaser.Scene {
   constructor () {
@@ -80,7 +82,36 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.image('phaserLogo', 'assets/logo.png');
         this.load.image('box', 'assets/ui/grey_box.png');
         this.load.image('checkedBox', 'assets/ui/blue_boxCheckmark.png');
-        this.load.audio('titleMusic', ['assets/music/spelunky1.mp3']);
+        this.load.audio('titleMusic', ['assets/music/TitleTheme.ogg']);
+        this.load.audio('japeFoot', ['assets/music/JapeFoot.ogg']);
+
+        this.load.audio('psychoZone', ['assets/music/PsychoZone.ogg']);
+
+        this.load.audio('jump', ['assets/sounds/jump1B.ogg']);
+        this.load.audio('jump2', ['assets/sounds/jump2B.ogg']);
+        this.load.audio('playerKick', ['assets/sounds/playerKick.ogg']);
+        this.load.audio('playerFlip', ['assets/sounds/playerFlip.ogg']);
+        this.load.audio('rebound', ['assets/sounds/reboundB.ogg']);
+
+        this.load.audio('powerupFound', ['assets/sounds/powerupFound.ogg']);
+        this.load.audio('speedupFound', ['assets/sounds/speedupFound.ogg']);
+        this.load.audio('laserFound', ['assets/sounds/laserFound.ogg']);
+        this.load.audio('doublejumpFound', ['assets/sounds/doublejumpFound.ogg']);
+
+        this.load.audio('hurt', ['assets/sounds/hurt.ogg']);
+        this.load.audio('hurt2', ['assets/sounds/hurt2.ogg']);
+
+        this.load.audio('dropKickCharge', ['assets/sounds/dropKickChargeE.ogg']);
+        this.load.audio('dropKick', ['assets/sounds/dropKickB.ogg']);
+        this.load.audio('dropKickRebound', ['assets/sounds/dropKickReboundB.ogg']);
+        this.load.audio('playerLaser', ['assets/sounds/playerLaserB.ogg']);
+
+        this.load.audio('enemyLaserCharge', ['assets/sounds/enemyLaserChargeC.ogg']);
+        this.load.audio('enemyLaserFire', ['assets/sounds/enemyLaserFireC.ogg']);
+        this.load.audio('enemyLaserFiring', ['assets/sounds/enemyLaserFiringE.ogg']);
+
+        this.load.audio('lose', ['assets/sounds/lose.ogg']);
+        this.load.audio('win', ['assets/sounds/win.ogg']);
         
         this.load.spritesheet('dude', 'assets/player/dude.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('cone', 'assets/entities/cone.png', { frameWidth: 32, frameHeight: 34 });
@@ -92,7 +123,7 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.image('cannon', 'assets/entities/cannon.png');
         this.load.spritesheet('laser', 'assets/entities/laserCannon.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('laserbeam', 'assets/entities/laserbeam.png')
-        this.load.spritesheet('laserdown', 'assets/entities/laserbeam.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('laserdown', 'assets/entities/laserdown.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('copter', 'assets/entities/copter.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('jumpster', 'assets/entities/jumpster.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('funbat', 'assets/entities/funbat.png', { frameWidth: 32, frameHeight: 32 });
@@ -104,6 +135,14 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.spritesheet('laserItem', 'assets/items/laserItem.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('doublejump', 'assets/items/doublejump.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('speedup', 'assets/items/speedup.png', { frameWidth: 32, frameHeight: 32 });
+
+        this.load.image('bg1', 'assets/bg/sky.png');
+        // this.load.image('bg2', 'assets/bg/sky.png');
+        // this.load.image('bg3', 'assets/bg/sky.png');
+        // Increment readyCount again once all audio files are decoded:
+        // this.sound.once('decodeall', function() {
+        //   this.ready();
+        // });
   }
 
   create () {
@@ -113,6 +152,11 @@ export default class PreloaderScene extends Phaser.Scene {
         this.readyCount = 0;
   }
 
+  /**
+   * Various parts of the preload method call this method once they're done loading stuff.
+   * Ideally, this should guarantee that every asset can be deployed instantly before the game continues further.
+   * When everything is ready, this will open the title scene.
+   */
   ready () {
         // this.scene.start('Title'); // Comment this line out to ensure everything is loaded. Keep it in to get to the title faster.
         this.readyCount++;
