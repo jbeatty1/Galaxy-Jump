@@ -12,6 +12,7 @@ export default class Jumpster extends Enemy {
         // Basic construction function calls
         super(scene, x, y, key);
         this.setTexture('jumpster');
+        this.model = this.scene.model;
         
         // Basic variables:
         this.recoilVulnerable = true;
@@ -76,6 +77,8 @@ export default class Jumpster extends Enemy {
             frames: [ { key: 'jumpster', frame: 4 } ],
             frameRate: 20
         });
+
+        this.sfxJump = this.scene.sound.add('jump2', { volume: 0.1, loop: false });
     }
 
     update(time, delta) {
@@ -187,6 +190,9 @@ export default class Jumpster extends Enemy {
      * Causes the enemy to jump.
      */
     jump() {
+        if (this.model.soundOn === true) {
+            this.sfxJump.play();
+        }
         this.setVelocityY(this.jumpPower);
     }
 

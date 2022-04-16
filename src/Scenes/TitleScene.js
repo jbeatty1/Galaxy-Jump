@@ -8,6 +8,7 @@ import config from '../Config/config';
 /**
  *  The Title Scene is really where the game is fully loaded.
  *  This is a game scene that shows options to enter other game scenes.
+ *  Code modified by Tony, Nabeeha, and Josiah
  */
 export default class TitleScene extends Phaser.Scene {
     constructor () {
@@ -40,13 +41,17 @@ export default class TitleScene extends Phaser.Scene {
         this.keybindingButtonn =  new Button(this, config.width/2, config.height/2 + 100, 'blueButton1', 'blueButton2', 'Controls', 'Keybinding');
         // Credits
         this.creditsButton = new Button(this, config.width/2, config.height/2 + 200, 'blueButton1', 'blueButton2', 'Credits', 'Credits');
-        // this.model = this.sys.game.globals.model;
+        
+		this.model = this.sys.game.globals.model;
+
         // Music player
-        // if (this.model.musicOn === true && this.model.bgMusicPlaying === false) {
-        //     this.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
-        //     this.bgMusic.play();
-        //     this.model.bgMusicPlaying = true;
-        //     this.sys.game.globals.bgMusic = this.bgMusic;
-        // }
+        if (this.model.musicOn === true && this.model.bgMusicPlaying === false) {
+            this.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
+            this.bgMusic.play();
+            this.model.bgMusicPlaying = true;
+            this.sys.game.globals.bgMusic = this.bgMusic;
+        }
+
+        this.sound.pauseOnBlur = false;
     }
 }

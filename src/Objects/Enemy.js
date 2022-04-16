@@ -26,6 +26,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.group = this.scene.enemies;
         this.cam = this.scene.cameras.main;
         this.camBoundary = 32; // The enemy can load in using loadWhenOnScreen from this many pixels away outside the camera.
+        this.model = this.scene.model;
 
         // Basic variables:
         this.alive = true;
@@ -69,6 +70,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.breakCollider = this.scene.physics.add.overlap(this, this.layer, this.breakTile, null, this);
         this.selfCollider = this.scene.physics.add.overlap(this, this.group, this.checkSelfCollision, null, this);
         
+        this.sfxHit = this.scene.sound.add('hurt', { volume: 0.2, loop: false });
     }
 
     update(time, delta) {
@@ -248,6 +250,9 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
             return;
 
         // console.log("ENEMY HIT");
+        if (this.alive && this.model.soundOn === true) {
+            this.sfxHit.play();
+        }
         this.alive = false;
         this.body.setVelocityX(vx);
         this.body.setVelocityY(vy);
