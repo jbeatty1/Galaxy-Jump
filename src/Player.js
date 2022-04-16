@@ -1604,7 +1604,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.jump = false;
         this.maxJumpTicks = false;
         this.P_JUMP = false;
-       setTimeout(() => {this.scene.scene.restart(); // Change functionality later
+       setTimeout(() => {this.scene.restart(); // Change functionality later
     }, 2000);
     }
 
