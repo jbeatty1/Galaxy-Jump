@@ -10,6 +10,7 @@ import OptionsScene from './Scenes/OptionsScene';
 import CreditsScene from './Scenes/CreditsScene';
 import testCourse from './Scenes/Courses/testCourse';
 import testCourse2 from './Scenes/Courses/testCourse2';
+import course2 from './Scenes/Courses/course2';
 import PauseScene from './Scenes/PauseScene';
 
 import Model from './Model';
@@ -42,6 +43,8 @@ class Game extends Phaser.Game {
     this.scene.add('testCourse', testCourse);
     this.scene.add('testCourse2', testCourse2);
     this.scene.add('Pause', PauseScene);
+    this.scene.add('course2', course2);
+
 
 
     this.scene.start('Boot');
