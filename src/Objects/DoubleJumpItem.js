@@ -19,9 +19,10 @@ export default class DoubleJumpItem extends Item {
     */
      constructor (scene, x, y, key) {
         // Basic construction function calls
-        super(scene, x, y, 'doublejump');
+        super(scene, x, y, key);
         this.setTexture('doublejump');
-        
+        this.textureKey = 'doublejump';
+
         this.itemType = this.itemEnum.DOUBLEJUMP;
 
         this.anims.create({

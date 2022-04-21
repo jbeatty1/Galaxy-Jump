@@ -301,6 +301,23 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
+     * Checks if the enemy is past the leftmost edge of the screen.
+     * @returns {Boolean} true if the enemy is off screen to the left, false otherwise
+     */
+    isLeftOffScreen() {
+        return this.getCenter().x < this.cam.scrollX;
+    }
+
+
+    /**
+     * Checks if the enemy is past the leftmost edge of the screen.
+     * @returns {Boolean} true if the enemy is off screen to the left, false otherwise
+     */
+     isRightOffScreen() {
+        return this.cam.scrollX + this.cam.displayWidth < this.getCenter().x;
+    }
+
+    /**
      * Disables an enemy's body until it first appears near the screen.
      * When this happens, the loaded flag is set to true.
      */

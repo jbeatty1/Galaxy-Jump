@@ -19,8 +19,9 @@ export default class LaserItem extends Item {
     */
      constructor (scene, x, y, key) {
         // Basic construction function calls
-        super(scene, x, y, 'laserItem');
+        super(scene, x, y, key);
         this.setTexture('laserItem');
+        this.textureKey = 'laserItem';
         
         this.itemType = this.itemEnum.LASER;
 

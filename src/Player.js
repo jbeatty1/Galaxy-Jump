@@ -2,6 +2,9 @@ import 'phaser';
 import {checkWallManual} from './Objects/Enemy';
 import HealthBar from './HealthBar';
 import Item from './Objects/Item';
+import Goal from './Objects/Goal';
+import Checkpoint from './Objects/Checkpoint';
+
 /**
  * Class modeling the player character with all movement abilities.
  * This player can be added to any scene by creating a new Player object.
@@ -28,9 +31,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.enemies = enemies;
         this.items = this.scene.items;
         this.heat = this.scene.heat;
+        this.goals = this.scene.goalGroup;
+        this.checkpoints = this.scene.checkpoints;
+
         this.cam = this.scene.cameras.main;
         this.camBoundary = 32;
         this.model = this.scene.model;
+        this.nextLevel = this.scene.nextLevel;
 
         this.cam.startFollow(this, false, 1, 1); // Setting 2nd parameter to 'true' will make the camera round its position value to integers
         this.cam.setDeadzone(70, 50);
@@ -119,6 +126,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.F_FLIP_VEL = 500;
         this.F_FLIP_W = 30;
         this.F_FLIP_H = 30;
+        this.F_FLIP_ATTACK_W = 50; // Two hitboxes layered on top of each other. One handles terrain collision, the other handles enemies
+        this.F_FLIP_ATTACK_H = 45;
         this.F_FLIP_RADIUS = 36; // Radius of arc representing the flip's trajectory
         this.F_FLIP_FRONT = 170; // Start and end angles of arc
         this.F_FLIP_BACK = 340;
@@ -148,6 +157,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.recoilVelocity = 300;
         this.invincible = false;
         this.alive = true;
+        this.controllable = true;
 
         // Animation variables:
         this.animsResetFlag = false;
@@ -414,6 +424,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.sfxDie = this.scene.sound.add('lose', { volume: 0.55, loop: false });
         this.sfxWin = this.scene.sound.add('win', { volume: 0.55, loop: false });
+        this.sfxCheckpoint = this.scene.sound.add('checkpoint', { volume: 0.55, loop: false });
 
         // For some reason, the sprite renders the pixels at the bottom of the row above it.
         // This crops 1 pixel from the top of the sprite to stop this.
@@ -431,10 +442,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Make another group to hold the laser sprites
         this.sprites = this.scene.add.group();
-        this.sideKickBox = this.scene.add.rectangle(-10, -10, this.K_SIDEKICK_W, this.K_SIDEKICK_H);
-        this.slideBox = this.scene.add.rectangle(-10, -10, this.S_SLIDE_W, this.S_SLIDE_H);
-        this.dropKickBox = this.scene.add.rectangle(-10,-10, this.D_DROPKICK_W, this.D_DROPKICK_H);
-        this.flipBox = this.scene.add.rectangle(-10, -10 , this.F_FLIP_W, this.F_FLIP_H);
+        this.sideKickBox = this.scene.add.rectangle(0, 0, this.K_SIDEKICK_W, this.K_SIDEKICK_H);
+        this.slideBox = this.scene.add.rectangle(0, 0, this.S_SLIDE_W, this.S_SLIDE_H);
+        this.dropKickBox = this.scene.add.rectangle(0,0, this.D_DROPKICK_W, this.D_DROPKICK_H);
+        this.flipBox = this.scene.add.rectangle(0, 0, this.F_FLIP_W, this.F_FLIP_H);
+        this.flipAttackBox = this.scene.add.rectangle(0, 0, this.F_FLIP_ATTACK_W, this.F_FLIP_ATTACK_H);
         
         // Begin modified code from https://labs.phaser.io/edit.html?src=src/paths/circle%20path.js
         // this.flipPath = new Phaser.Curves.Path();
@@ -456,11 +468,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.pHitboxes.add(this.slideBox);
         this.pHitboxes.add(this.dropKickBox);
         this.pHitboxes.add(this.flipBox);
+        this.pHitboxes.add(this.flipAttackBox);
 
         this.sideKickBox.setActive(false);
         this.slideBox.setActive(false);
         this.dropKickBox.setActive(false);
         this.flipBox.setActive(false);
+        this.flipAttackBox.setActive(false);
 
         // The hitbox's position changes, but it does not actually have velocity.
         // This means it will not actually "collide" with anything, but it can still overlap with things.
@@ -493,6 +507,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.softCollider = this.scene.physics.add.overlap(this.pHitboxes, this.solids, this.breakSoft, null, this);
         this.hardCollider = this.scene.physics.add.overlap(this.dropKickBox, this.solids, this.breakHard, null, this);
 
+        // Goal collider
+        this.goalCollider = this.scene.physics.add.overlap(this, this.goals, this.hitGoal, null, this);
+
+        // Checkpoint collider
+        this.checkpointCollider = this.scene.physics.add.overlap(this, this.checkpoints, this.hitCheckpoint, null, this);
+
 
         this.alignRan = 0;
         this.reboundRan = 0;
@@ -508,7 +528,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.ticks += delta;
 
         /** Actions */
-        if (this.alive) {
+        if (this.controllable) {
             /** Left and right movement, only when not crouching */
             /** @Move */
             if (this.cursors.left.isDown && ((!this.crouching && !this.sliding) || !this.body.onFloor()))
@@ -834,6 +854,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.canSlide = false;
 
                 this.flipBox.setActive(true);
+                this.flipAttackBox.setActive(true);
                 this.atkDelayEnd = this.ticks + this.attackDelay;
                 if (this.model.soundOn === true) {
                     this.sfxFlip.play();
@@ -847,12 +868,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                     this.flipping = false;
                     this.pathIndex = 0;
                     this.flipBox.setActive(false);
+                    this.flipAttackBox.setActive(false);
                 }
             }
             else {
                 this.flipping = false;
                 this.pathIndex = 0;
                 this.flipBox.setActive(false);
+                this.flipAttackBox.setActive(false);
                 // this.kickDirection = this.xDirection.NONE;
             }
             if (this.cursors.attack.isUp && !this.flipping) {
@@ -1241,6 +1264,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.flipAngle = Math.atan(this.flipLastTan.y / this.flipLastTan.x);
         
         this.flipBox.setPosition(this.pathVector.x, this.pathVector.y);
+        this.flipAttackBox.setPosition(this.pathVector.x, this.pathVector.y);
         
         // Increment the path index until the hitbox reaches the end of the arc
         this.pathIndex = Math.min(this.pathIndex + this.F_FLIP_SPEED, 1);
@@ -1587,7 +1611,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
             else if (this.kickDirection === this.xDirection.LEFT)
                 vx = -this.K_KICK_VEL;
-            vy = this.K_SIDEKICK_Y;
+            vy = this.K_SIDEKICK_Y * 2;
+            vx *= 1.2;
             hit = true;
         }
 
@@ -1607,14 +1632,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 vx = this.S_SLIDE_XVEL;
             else if (this.kickDirection == this.xDirection.LEFT)
                 vx = -this.S_SLIDE_XVEL;
-            vy = this.S_SLIDE_YVEL;
+            vy = this.S_SLIDE_YVEL * 2;
             hit = true;
         }
 
         // Handle flip
-        if (this.flipping && this.scene.physics.overlap(this.flipBox, enemy)) {
+        if (this.flipping && this.scene.physics.overlap(this.flipAttackBox, enemy)) {
             vx = -this.flipReboundVec.x;
-            vy = -this.flipReboundVec.y;
+            vy = -this.flipReboundVec.y * 2;
             hit = true;
         }
 
@@ -1626,7 +1651,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         if (hit && enemy.recoilVulnerable) {
             // console.log("PLAYER HIT");
-            enemy.hit(vx, vy * 2);
+            enemy.hit(vx, vy);
             console.log(vx);
         }
     }
@@ -1744,14 +1769,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.hurtRan++;
                 vy = Math.max(Math.abs(this.body.velocity.y), recoilY * 0.5);
             }
-            this.resetState();
-            this.body.setVelocity(vx, vy);
-            this.HP = Math.min(this.maxHP, this.HP - amount);
-            this.ticksToDamageEnd = this.ticks + this.iFrames;
-            this.hurtAnimEnd = this.ticks + this.hurtAnimTicks;
-            if (this.model.soundOn === true) {
-                this.sfxHurt.play();
+            if (this.alive) {
+                this.resetState();
+                if (this.model.soundOn === true) {
+                    this.sfxHurt.play();
+                }
+                this.HP = Math.min(this.maxHP, this.HP - amount);
+                this.ticksToDamageEnd = this.ticks + this.iFrames;
+                this.hurtAnimEnd = this.ticks + this.hurtAnimTicks;
             }
+            
+            this.body.setVelocity(vx, vy);
+            
+            
         }
     }
 
@@ -1765,6 +1795,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.model.soundOn === true) {
             this.sfxDie.play();
         }
+        this.HP = 0;
         this.anims.play('hurt', true);
         //the slide animation looks like the player died
         // I beg to differ!!!!!!!!!!
@@ -1777,8 +1808,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // this.jump = false;
         // this.maxJumpTicks = false;
         // this.P_JUMP = false;
-        // setTimeout(() => {this.scene.scene.restart(); // Change functionality later
-        // }, 2000);
+        setTimeout(() => {
+            if (this.scene instanceof Phaser.Scene)
+                this.scene.scene.restart(); 
+        }, 4000);
     
         // Additions by Tony Imbesi: Stop camera and reset state
         this.resetState();
@@ -1790,6 +1823,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Setting this flag disables all user input without having to edit the controller object. 
         // All actions that check for keys pressed are inside an if (this.alive) statement.
         this.alive = false; 
+        this.controllable = false;
         this.setAllColliders(false);
         // End code by Tony Imbesi
     }
@@ -1896,6 +1930,70 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
+     * Handles touching the goal UFO.
+     * The player model disappears and is no longer controllable, and the UFO flies away.
+     * Shortly after, the next course loads.
+     * I found out from testing that you can still trigger this event and clear the course if you die
+     * and your body collides with it before the scene restarts. This is hilarious and will stay in the game.
+     * 
+     * @author Tony Imbesi
+     * @version 4/20/2022
+     * 
+     * @param {Player} body the player
+     * @param {Goal} goal the goal UFO
+     */
+    hitGoal(body, goal) {
+        this.setVisible(false);
+        goal.flyAway(this.body.velocity.x, this.body.velocity.y);
+        if (this.model.soundOn === true) {
+            this.sfxWin.play();
+        }
+        this.controllable = false;
+        this.model.checkpointSet = false;
+        this.model.spawnX = undefined;
+        this.model.spawnY = undefined;
+        // Save progress: increase the levelCleared number if you cleared a later course
+        if (Number(localStorage.levelCleared) < this.scene.clearId) {
+            localStorage.levelCleared = this.scene.clearId;
+        }
+
+        // Begin modified code from Josiah Cornelius
+        setTimeout(() => {
+            this.scene.scene.start(this.nextLevel);;
+        }, 3000);
+        // End modified code from Josiah Cornelius
+        this.disableBody();
+        
+    }
+
+    /**
+     * Handles touching a checkpoint flag.
+     * The checkpoint disappears and its coordinates are passed to the global model
+     * for reference later. When the player respawns, those coordinates will be used instead
+     * of the spawnpoint coordinates.
+     * 
+     * @author Tony Imbesi
+     * @version 4/20/2022
+     * 
+     * @param {Player} body the player
+     * @param {Checkpoint} checkpoint the checkpoint flag
+     */
+    hitCheckpoint(body, checkpoint) {
+        // console.log('hitCheckpoint ran');
+        if (!checkpoint.triggered) {
+            this.HP = this.maxHP;
+            checkpoint.trigger(this.body.velocity.x);
+            if (this.model.soundOn === true) {
+                this.sfxCheckpoint.play();
+            }
+            this.model.spawnX = checkpoint.x;
+            this.model.spawnY = checkpoint.y - 12;
+            this.model.checkpointSet = true;
+        }
+    }
+
+
+    /**
      * Resets every significant state variable.
      */
     resetState() {
@@ -1903,6 +2001,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.cam.setDeadzone(70, 50);
         this.cam.setFollowOffset(0, 0);
         this.alive = true;
+        this.controllable = true;
         this.canAttack = false;
         this.canJump = false;
         this.canSlide = false;

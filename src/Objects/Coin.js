@@ -19,10 +19,12 @@ export default class Coin extends Item {
     */
      constructor (scene, x, y, key) {
         // Basic construction function calls
-        super(scene, x, y, 'coin');
+        super(scene, x, y, key);
         this.setTexture('coin');
+        this.textureKey = 'coin';
         
         this.itemType = this.itemEnum.COIN;
+        
         this.anims.create({
             key: 'spin',
             frames: this.anims.generateFrameNumbers('coin', { start: 0, end: 5 }),

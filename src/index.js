@@ -10,8 +10,12 @@ import OptionsScene from './Scenes/OptionsScene';
 import CreditsScene from './Scenes/CreditsScene';
 import testCourse from './Scenes/Courses/testCourse';
 import testCourse2 from './Scenes/Courses/testCourse2';
+import Course1 from './Scenes/Courses/Course1';
+import Course2 from './Scenes/Courses/Course2';
+import Course3 from './Scenes/Courses/Course3';
 import KeybindingScene from './Scenes/KeybindingScene';
-import PauseScene from './Scenes/PauseScene';
+import SelectScene from './Scenes/SelectScene';
+// import PauseScene from './Scenes/PauseScene';
 
 import Model from './Model';
 import PlayerController from './PlayerController';
@@ -41,10 +45,14 @@ class Game extends Phaser.Game {
     this.scene.add('Credits', CreditsScene);
     this.scene.add('Game', GameScene);
     this.scene.add('Keybinding', KeybindingScene);
-    this.scene.add('Pause', PauseScene);
+    this.scene.add('Select', SelectScene);
+    // this.scene.add('Pause', PauseScene);
 
     this.scene.add('testCourse', testCourse);
     this.scene.add('testCourse2', testCourse2);
+    this.scene.add('Course1', Course1);
+    this.scene.add('Course2', Course2);
+    this.scene.add('Course3', Course3);
     
     this.scene.start('Boot');
   }

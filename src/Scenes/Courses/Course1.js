@@ -39,7 +39,6 @@ import LaserItem from '../../Objects/LaserItem';
 import Coin from '../../Objects/Coin';
 import PauseScreen from '../PauseScreen';
 import Goal from '../../Objects/Goal';
-import Checkpoint from '../../Objects/Checkpoint';
 
 
 
@@ -68,7 +67,7 @@ var propertiesText;
 
 export default class testCourse extends Phaser.Scene {
     constructor () {
-        super('testCourse');
+        super('Course1');
     }
 
     preload ()
@@ -94,7 +93,6 @@ export default class testCourse extends Phaser.Scene {
     create ()
     {
         this.nextLevel = 'Course2';
-        this.clearId = 1; // Number used to track saved progress. Each course is numbered from 1 to 3.
         this.sound.pauseOnBlur = false;
         this.sound.stopAll();
         this.model = this.sys.game.globals.model;
@@ -127,7 +125,7 @@ export default class testCourse extends Phaser.Scene {
         this.heat = this.map.createLayer('heat', this.dangerTiles, 0, 0);
         this.heat.setDepth(3);
 
-        this.terrainTiles = this.map.addTilesetImage('fantasy-tiles_32x32', 'tiles1');
+        this.terrainTiles = this.map.addTilesetImage('fantasy-tiles_32x32', 'tiles');
         this.solids = this.map.createLayer('terrain', this.terrainTiles, 0, 0);
         this.solids.setDepth(1);
         
@@ -269,7 +267,6 @@ export default class testCourse extends Phaser.Scene {
         this.testEnemy = this.enemyArray[0];
         this.enemies.setDepth(2);
 
-        // Make the items
         this.items = this.physics.add.group({
             collideWorldBounds: false,
             allowGravity: false
@@ -300,65 +297,20 @@ export default class testCourse extends Phaser.Scene {
         ]); 
         this.testItem = this.itemArray[0];
         this.items.addMultiple(this.itemArray);
-        // Do this to start the scene with each item's texture loaded properly.
-        this.items.children.iterate(c => {
-            c.setTexture(c.textureKey);
+        this.items.children.iterate(function(child) {
+            child.updateItemType();
         });
+
         this.items.setDepth(0);
-
-        // Make the checkpoints
-        this.checkpoints = this.physics.add.group({
-            collideWorldBounds: false,
-            allowGravity: false
-        });
-        // Remove default config information
-        this.checkpoints.defaults = {};
-        this.checkpointArray = this.map.createFromObjects('checkpoints', [
-            { 
-                // Find the gid by checking the firstgid value in the tileset as shown in the course's .json file
-                // then counting from the top-left to the bottom-right.
-                // The firstgid of 'objects' in course1.json is 65
-                gid: 79,
-                classType: Checkpoint
-            }
-        ]); 
-        this.testCheckpoint = this.checkpointArray[0];
-        this.checkpoints.addMultiple(this.checkpointArray);
-        // Do this to start the scene with each checkpoint's texture loaded properly.
-        this.checkpoints.children.iterate(c => {
-            // Remove the checkpoint that was set in the player's previous life
-            if (this.model.spawnX == c.x && this.model.spawnY + 12 == c.y) {
-                c.setActive(false);
-                c.setVisible(false);
-                c.triggered = true;
-                console.log("Checkpoint removed");
-            }
-            else {
-                console.log("Checkpoint: " + c.x);
-                console.log("SpawnX: " + this.model.spawnX);
-                c.setTexture("checkpoint");
-            }
-        });
-        this.checkpoints.setDepth(1);
-
         // this.enemies.children.iterate(function (child) {
         //     child.body.setAllowGravity(true);
         //     child.body.setCollideWorldBounds(false);
         // });        
 
-        /** Set the player's spawn point */
-        var spawnX = 0;
-        var spawnY = 0;
-        if (this.model.checkpointSet === true) {
-            spawnX = this.model.spawnX;
-            spawnY = this.model.spawnY;
-        }
-        else {
-            // The object layer can be accessed as an array of objects. objects[0] is the first object in the 'spawnpoint' object layer.
-            spawnX = this.map.getObjectLayer('spawnpoint').objects[0].x;
-            spawnY = this.map.getObjectLayer('spawnpoint').objects[0].y;
-        }
-        
+        /** Make the player character */
+        // The object layer can be accessed as an array of objects. objects[0] is the first object in the 'spawnpoint' object layer.
+        var spawnX = this.map.getObjectLayer('spawnpoint').objects[0].x;
+        var spawnY = this.map.getObjectLayer('spawnpoint').objects[0].y;
         // This thing is similar to an input listener.
         // controls = this.input.keyboard.createCursorKeys();
         
@@ -436,7 +388,6 @@ export default class testCourse extends Phaser.Scene {
        
         if (this.model.bgMusicPlaying)
             this.bgMusic.stop();
-            
         this.bgMusic = this.sound.add('japeFoot', { volume: 0.45, loop: true });
         if (this.model.musicOn === true) {
             this.bgMusic.play();
@@ -630,9 +581,6 @@ export default class testCourse extends Phaser.Scene {
         this.items.children.iterate(function(child) {
             child.anims.pause();
         });
-        this.goalGroup.children.iterate(function(child) {
-            child.anims.pause();
-        });
         this.sound.pauseAll();
         if (this.model.soundOn === true) {
             this.sfxPause.stop();
@@ -663,9 +611,6 @@ export default class testCourse extends Phaser.Scene {
                 child.anims.resume();
         });
         this.items.children.iterate(function(child) {
-            child.anims.resume();
-        });
-        this.goalGroup.children.iterate(function(child) {
             child.anims.resume();
         });
         this.sound.resumeAll();

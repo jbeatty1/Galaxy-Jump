@@ -66,9 +66,9 @@ var propertiesText;
 // var this.blockTiles;
 // var this.semiTiles;
 
-export default class testCourse extends Phaser.Scene {
+export default class Course2 extends Phaser.Scene {
     constructor () {
-        super('testCourse');
+        super('Course2');
     }
 
     preload ()
@@ -86,15 +86,15 @@ export default class testCourse extends Phaser.Scene {
         // To make a tile this.map, load the image, then load the .json file created in Tiled
         // this.load.image('tiles', 'assets/tilesets/ground_1x1.png');
         
-        this.load.tilemapTiledJSON('this.map', 'assets/courses/course1.json');
+        this.load.tilemapTiledJSON('this.map2', 'assets/courses/course2.json');
     }
 
     
     
     create ()
     {
-        this.nextLevel = 'Course2';
-        this.clearId = 1; // Number used to track saved progress. Each course is numbered from 1 to 3.
+        this.nextLevel = 'testCourse';
+        this.clearId = 2;
         this.sound.pauseOnBlur = false;
         this.sound.stopAll();
         this.model = this.sys.game.globals.model;
@@ -110,7 +110,7 @@ export default class testCourse extends Phaser.Scene {
         // loadTiles(this);
         // loadEntities(this);
         this.map = this.make.tilemap({
-            key: 'this.map',
+            key: 'this.map2',
         });
         
 
@@ -437,7 +437,7 @@ export default class testCourse extends Phaser.Scene {
         if (this.model.bgMusicPlaying)
             this.bgMusic.stop();
             
-        this.bgMusic = this.sound.add('japeFoot', { volume: 0.45, loop: true });
+        this.bgMusic = this.sound.add('heatSecret', { volume: 0.45, loop: true });
         if (this.model.musicOn === true) {
             this.bgMusic.play();
             this.model.bgMusicPlaying = true;
