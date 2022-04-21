@@ -23,3 +23,5 @@ laserFound
 powerupFound
 speedupFound
 doublejumpFound
+healthWarn
+checkpoint
