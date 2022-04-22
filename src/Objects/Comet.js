@@ -63,6 +63,7 @@ export default class Comet extends Enemy {
         }
         this.setRotation(this.body.velocity.angle() - Math.PI / 2 );
         // super.checkOffScreen(true);
+        super.checkOutOfBounds();
     }
 
     hit(vx, vy) {

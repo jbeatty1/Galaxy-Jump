@@ -13,7 +13,7 @@ export default class Laser extends Enemy {
         super(scene, x, y, key);
         this.setTexture('laser');
         this.model = this.scene.model;
-        
+
         // Basic variables:
         this.alive = true;
         this.recoilVulnerable = false;
@@ -59,6 +59,11 @@ export default class Laser extends Enemy {
         this.L_OFFSET = 4;
         this.L_INCREMENT = 4;
         this.sprites = []; // Array used to draw and remove laser sprites
+        this.warningSprite = this.scene.add.sprite(this.x, this.y, 'laserwarn');
+        this.warningSprite.setVisible(false);
+        this.warningSprite.setScrollFactor(0, 1);
+        this.warningSprite.setDepth(3);
+        this.warningOffset = 40;
         this.laserWidth = 0;
         this.oldWidth = -1;
 
@@ -89,10 +94,17 @@ export default class Laser extends Enemy {
             repeat: -1
         });
 
-        this.sfxLaserCharge = this.scene.sound.add('enemyLaserCharge', { volume: 0.25, loop: false });
+        this.warningSprite.anims.create({
+            key: 'warn',
+            frames: this.anims.generateFrameNumbers('laserwarn', { start: 0, end: 1 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.sfxLaserCharge = this.scene.sound.add('enemyLaserCharge', { volume: 0.4, loop: false });
         // this.sfxLaserCharge.addMarker({ name: 'chargeLoop', start: 1 });
-        this.sfxLaserFire = this.scene.sound.add('enemyLaserFire', { volume: 0.25, loop: false });
-        this.sfxLaserFiring = this.scene.sound.add('enemyLaserFiring', { volume: 0.25, loop: true });
+        this.sfxLaserFire = this.scene.sound.add('enemyLaserFire', { volume: 0.4, loop: false });
+        this.sfxLaserFiring = this.scene.sound.add('enemyLaserFiring', { volume: 0.4, loop: true });
 
         this.init = false;
     }
@@ -113,6 +125,7 @@ export default class Laser extends Enemy {
             }
             this.laserBaseY = this.getCenter().y;
             this.anims.play('idle');
+            this.warningSprite.setPosition(this.x, this.y - 32);
             // console.log(this.facing + ', ' + this.laserBaseX);
             this.init = true;
             this.sequence = this.seq.STOPPED;
@@ -174,6 +187,7 @@ export default class Laser extends Enemy {
         if (this.model.soundOn === true && !this.sfxLaserCharge.isPlaying) {
             this.sfxLaserCharge.play();
         }
+        this.showWarning();
         if (this.timer != -1 && this.ticks >= this.timer) {
             this.timer = this.ticks + this.fireTime;
             this.sequence = this.seq.FIRE;
@@ -191,6 +205,7 @@ export default class Laser extends Enemy {
      * Final part of the sequence. Fire the laser, and reset the cycle.
      */
     fire() {
+        this.warningSprite.setVisible(false);
         this.anims.play('fire', true);
         this.drawLaser();
         this.checkLaserCollision();
@@ -215,6 +230,34 @@ export default class Laser extends Enemy {
         this.sprites.forEach(s => {
             s.destroy();
         });
+    }
+
+    /**
+     * Show the warning sprite
+     */
+    showWarning() {
+        if (this.facing == this.xDirection.LEFT) {
+            if (super.isRightOffScreen()) {
+                console.log("Laser at " + this.x + " is to the right");
+                this.warningSprite.anims.play('warn', true);
+                this.warningSprite.setVisible(true);
+                this.warningSprite.x = this.cam.displayWidth - this.warningOffset;
+            }
+            else {
+                this.warningSprite.setVisible(false);
+            }
+        }
+        else if (this.facing == this.xDirection.RIGHT) {
+            if (super.isLeftOffScreen()) {
+                console.log("Laser at " + this.x + " is to the left");
+                this.warningSprite.anims.play('warn', true);
+                this.warningSprite.setVisible(true);
+                this.warningSprite.x = this.warningOffset;
+            }
+            else {
+                this.warningSprite.setVisible(false);
+            }
+        }
     }
 
     /**
@@ -379,6 +422,7 @@ export default class Laser extends Enemy {
      * Remove the laser, reset its timer, and reset its animation cycle.
      */
     resetState() {
+        this.warningSprite.setVisible(false);
         if (this.laser != null)
             this.laser.destroy();
         // if (this.laserMask != null)

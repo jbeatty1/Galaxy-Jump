@@ -26,6 +26,8 @@ export default class Item extends Phaser.Physics.Arcade.Sprite {
         console.log("Item created");
         this.GRAVITY = 0;
         this.body.setAllowGravity(false);
+        this.textureKey = ""; // Each subclass sets this to a different string.
+        
         this.itemEnum = {
             COIN: 0,
             LASER: 1,
@@ -54,6 +56,7 @@ export default class Item extends Phaser.Physics.Arcade.Sprite {
      * update the item's type and texture.
      * @author Tony Imbesi
      * @version 4/8/2022
+     * 
      */
     updateItemType() {
         if (this.itemType === "coin") {
@@ -89,6 +92,10 @@ export default class Item extends Phaser.Physics.Arcade.Sprite {
             });
         }
 
+        this.anims.play('spin', true);
+    }
+
+    update() {
         this.anims.play('spin', true);
     }
 

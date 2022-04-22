@@ -5,6 +5,7 @@ import Button from '../Objects/Button';
 
 /*
   This is a basic options menu.
+  Modified by Tony Imbesi, 4/18/2022
 */
 export default class OptionsScene extends Phaser.Scene {
   constructor () {
@@ -35,21 +36,34 @@ export default class OptionsScene extends Phaser.Scene {
       this.updateAudio();
     }.bind(this));
 
+    
     this.menuButton = new Button(this, 400, 500, 'blueButton1', 'blueButton2', 'Menu', 'Title');
+
+    this.resetButton = new Button(this, 600, 500, 'blueButton1', 'blueButton2', 'Reset data?', null);
+    this.resetButton.button.on('pointerdown', function() {
+        localStorage.clear();
+        this.resetButton.text.setText('Data reset...');
+    }.bind(this));
 
     this.updateAudio();
   }
 
   updateAudio() {
+    this.bgMusic = this.sys.game.globals.bgMusic;
     if (this.model.musicOn === false) {
         this.musicButton.setTexture('box');
-        this.sys.game.globals.bgMusic.stop();
+        this.bgMusic.pause();
         this.model.bgMusicPlaying = false;
     }
     else {
         this.musicButton.setTexture('checkedBox');
         if (this.model.bgMusicPlaying === false) {
-            this.sys.game.globals.bgMusic.play();
+          if (this.bgMusic.isPaused) {
+            this.bgMusic.resume();
+          }
+          else {
+            this.bgMusic.play();
+          }
             this.model.bgMusicPlaying = true;
         }
     }

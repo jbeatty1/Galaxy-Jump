@@ -11,10 +11,11 @@ export default class HealthBar extends Phaser.GameObjects.Graphics {
      * @param {Phaser.Scene} scene the current scene
      * @param {Number} maxHP the maximum capacity of the health bar
      */
-    constructor (scene, maxHP, )
+    constructor (scene, maxHP)
     {
         super(scene, { x: 10, y: 10 });
         this.scene = scene;
+        this.model = this.scene.model;
         // this.bar = new Phaser.GameObjects.Graphics(scene);
         // this.x = x;
         // this.y = y;
@@ -24,7 +25,7 @@ export default class HealthBar extends Phaser.GameObjects.Graphics {
         this.barWidth = 120;
         this.barHeight = 20;
         this.barOffset = this.borderThickness * 2; // Dependent on border thickness. Ensures the inner part is drawn correctly given the border thickness
-        this.dangerThreshold = this.max * 0.3;
+        this.dangerThreshold = this.max * 0.5;
         this.borderColor = 0x000000;
         this.innerColor = 0xffffff;
         this.normalColor = 0x00ff00;
@@ -32,6 +33,9 @@ export default class HealthBar extends Phaser.GameObjects.Graphics {
         this.makeBar();
         this.scene.add.existing(this);
         this.setScrollFactor(0);
+        this.sfxWarn = this.scene.sound.add('healthWarn', { volume: 0.45, loop: false });
+        this.belowThreshold = false;
+        this.setDepth(10);
         // console.log("Loaded bar at " + this.x + ', ' + this.y);
     }
 
@@ -64,10 +68,19 @@ export default class HealthBar extends Phaser.GameObjects.Graphics {
         if (this.currentValue <= this.dangerThreshold)
         {
             this.fillStyle(this.dangerColor);
+            // Play the sound effect
+            if (!this.belowThreshold) {
+                if (this.model.soundOn === true) {
+                    this.sfxWarn.stop();
+                    this.sfxWarn.play();
+                }
+                this.belowThreshold = true;
+            }
         }
         else
         {
             this.fillStyle(this.normalColor);
+            this.belowThreshold = false;
         }
         var healthCalculation = Math.floor((this.currentValue / this.max) * (this.barWidth - this.barOffset));
         // console.log(healthCalculation);

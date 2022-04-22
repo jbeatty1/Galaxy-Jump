@@ -70,7 +70,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.breakCollider = this.scene.physics.add.overlap(this, this.layer, this.breakTile, null, this);
         this.selfCollider = this.scene.physics.add.overlap(this, this.group, this.checkSelfCollision, null, this);
         
-        this.sfxHit = this.scene.sound.add('hurt', { volume: 0.2, loop: false });
+        this.sfxHit = this.scene.sound.add('hurt', { volume: 0.1, loop: false });
     }
 
     update(time, delta) {
@@ -298,6 +298,23 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         var cameraBounds = new Phaser.Geom.Rectangle(this.cam.scrollX, this.cam.scrollY, this.cam.displayWidth, this.cam.displayHeight);
         //console.log(cameraBounds.x + ', ' + cameraBounds.width);
         return cameraBounds.contains(this.getCenter().x, this.getCenter().y);
+    }
+
+    /**
+     * Checks if the enemy is past the leftmost edge of the screen.
+     * @returns {Boolean} true if the enemy is off screen to the left, false otherwise
+     */
+    isLeftOffScreen() {
+        return this.getCenter().x < this.cam.scrollX;
+    }
+
+
+    /**
+     * Checks if the enemy is past the leftmost edge of the screen.
+     * @returns {Boolean} true if the enemy is off screen to the left, false otherwise
+     */
+     isRightOffScreen() {
+        return this.cam.scrollX + this.cam.displayWidth < this.getCenter().x;
     }
 
     /**

@@ -1,6 +1,5 @@
 /**
-Test of Galaxy Jump prototype in an application setting.
-Adds pausing, more tileset layers, and sounds.
+Course 2. All course files will be copied from testCourse.js.
 
 For Galaxy Jump project.
 
@@ -66,9 +65,9 @@ var propertiesText;
 // var this.blockTiles;
 // var this.semiTiles;
 
-export default class testCourse extends Phaser.Scene {
+export default class Course2 extends Phaser.Scene {
     constructor () {
-        super('testCourse');
+        super('Course2');
     }
 
     preload ()
@@ -86,31 +85,33 @@ export default class testCourse extends Phaser.Scene {
         // To make a tile this.map, load the image, then load the .json file created in Tiled
         // this.load.image('tiles', 'assets/tilesets/ground_1x1.png');
         
-        this.load.tilemapTiledJSON('this.map', 'assets/courses/course1_backup2.json');
+        this.load.tilemapTiledJSON('this.map2', 'assets/courses/course2.json');
     }
 
     
     
     create ()
     {
-        this.nextLevel = 'Course2';
-        this.clearId = 1; // Number used to track saved progress. Each course is numbered from 1 to 3.
+        this.nextLevel = 'Course3';
+        this.clearId = 2; // Number used to track saved progress. Each course is numbered from 1 to 3.
         this.sound.pauseOnBlur = false;
         this.sound.stopAll();
         this.model = this.sys.game.globals.model;
         this.physics.world.gravity.set(0, 700);
         this.physics.world.setBoundsCollision(true, true, false, false);
+        /** Make sure the width and height matches the dimensions of the tileset! */
         this.WORLD_WIDTH = 400 * 32;
         this.WORLD_HEIGHT = 45 * 32;
 
-        this.bg = this.add.image(0, 0, 'bg1').setOrigin(0, 0).setScale(3);
+        this.bg = this.add.image(0, 0, 'bg2')
+        this.bg.setOrigin(0, 0);
         this.bg.setScrollFactor(0);
 
         this.solids;
         // loadTiles(this);
         // loadEntities(this);
         this.map = this.make.tilemap({
-            key: 'this.map',
+            key: 'this.map2',
         });
         
 
@@ -383,6 +384,7 @@ export default class testCourse extends Phaser.Scene {
 
         // This line instantly sets up the player.
         this.player = new Player({scene:this, x:spawnX, y:spawnY}, this.solids, this.enemies, this.controls);
+        
         //this.player.setTexture(this.textures.get('dude'));
         
         // this.player = this.physics.add.sprite(spawnX, spawnY, 'dude');
@@ -400,7 +402,7 @@ export default class testCourse extends Phaser.Scene {
         this.cameras.main.setBounds(0, 0, this.WORLD_WIDTH, this.WORLD_HEIGHT);
         this.physics.world.setBounds(0, 0, this.WORLD_WIDTH, this.WORLD_HEIGHT);
 
-        propertiesText = this.add.text(16, 600, 'Properties: ', {
+        propertiesText = this.add.text(16, 600, '', {
             fontSize: '18px',
             fill: '#ffffff'
         });
@@ -408,9 +410,9 @@ export default class testCourse extends Phaser.Scene {
         propertiesText.setDepth(10);
         
         // Go to next scene!
-        this.input.keyboard.on('keydown-Q', () => {
-            this.scene.start('testCourse');
-        });
+        // this.input.keyboard.on('keydown-Q', () => {
+        //     this.scene.start('testCourse');
+        // });
 
         // this.input.keyboard.on('keydown-ENTER', () => {
         //     if (!this.physics.world.isPaused)
@@ -420,12 +422,12 @@ export default class testCourse extends Phaser.Scene {
         //         this.physics.world.resume();
         // });
 
-        this.input.keyboard.on('keydown-F', () => {
-            if (this.physics.world.isPaused) {
-                this.physics.world.resume();
-                this.frame = true;  // Update world one "frame" at a time by pressing F while paused
-            }
-        });
+        // this.input.keyboard.on('keydown-F', () => {
+        //     if (this.physics.world.isPaused) {
+        //         this.physics.world.resume();
+        //         this.frame = true;  // Update world one "frame" at a time by pressing F while paused
+        //     }
+        // });
         this.tickCount = 0;
 
         
@@ -437,7 +439,7 @@ export default class testCourse extends Phaser.Scene {
         if (this.model.bgMusicPlaying)
             this.bgMusic.stop();
 
-        this.bgMusic = this.sound.add('japeFoot', { volume: 0.45, loop: true });
+        this.bgMusic = this.sound.add('heatSecret', { volume: 0.45, loop: true });
         if (this.model.musicOn === true) {
             this.bgMusic.play();
             this.model.bgMusicPlaying = true;
@@ -489,10 +491,10 @@ export default class testCourse extends Phaser.Scene {
         }
 
         // Debug check for frame-by-frame updating
-        if (this.frame) {
-            this.frame = false;
-            this.physics.world.pause();
-        }
+        // if (this.frame) {
+        //     this.frame = false;
+        //     this.physics.world.pause();
+        // }
 
         // You can toggle the music at any time by pressing the M key
         if (Phaser.Input.Keyboard.JustDown(this.controls.mute)) {
@@ -523,33 +525,33 @@ export default class testCourse extends Phaser.Scene {
         //     }
         // }
         // DEBUG: Go back to high platform
-        if (this.controls.shift.isDown)
-        {
-            this.player.setPosition(30, 30);
-            //collision = false;
-            // player.setVelocityY(-4000);
-        }
+        // if (this.controls.shift.isDown)
+        // {
+        //     this.player.setPosition(30, 30);
+        //     //collision = false;
+        //     // player.setVelocityY(-4000);
+        // }
 
         
         // Begin modified code from https://labs.phaser.io/edit.html?src=src/tilemap/tile%20properties.js
-        var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main)
-        var pointerTileX = this.map.worldToTileX(worldPoint.x);
-        var pointerTileY = this.map.worldToTileY(worldPoint.y);
-        if (this.input.manager.activePointer.isDown)
-        {
-            var tile = this.map.getTileAt(pointerTileX, pointerTileY);
+        // var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main)
+        // var pointerTileX = this.map.worldToTileX(worldPoint.x);
+        // var pointerTileY = this.map.worldToTileY(worldPoint.y);
+        // if (this.input.manager.activePointer.isDown)
+        // {
+        //     var tile = this.map.getTileAt(pointerTileX, pointerTileY);
 
-            if (tile)
-            {
-                // Note: JSON.stringify will convert the object tile properties to a string
-                propertiesText.setText('!Properties: ' + JSON.stringify(tile.properties) + 
-                '\n faceLeft: ' + tile.faceLeft + ' faceRight: ' + tile.faceRight + ' faceBottom: ' + tile.faceBottom +
-                '\n collideLeft: ' + tile.collideLeft + ' collideRight: ' + tile.collideRight + ' canCollide: ' + tile.canCollide + ' collideUp: ' + tile.collideUp + ' collideDown: ' + tile.collideDown +
-                '\n x: ' + tile.x + ' y: ' + tile.y +
-                '\n worldX: ' + tile.pixelX + ' worldY: ' + tile.pixelY);
-                tile.properties.viewed = true;
-            }
-        }
+        //     if (tile)
+        //     {
+        //         // Note: JSON.stringify will convert the object tile properties to a string
+        //         propertiesText.setText('!Properties: ' + JSON.stringify(tile.properties) + 
+        //         '\n faceLeft: ' + tile.faceLeft + ' faceRight: ' + tile.faceRight + ' faceBottom: ' + tile.faceBottom +
+        //         '\n collideLeft: ' + tile.collideLeft + ' collideRight: ' + tile.collideRight + ' canCollide: ' + tile.canCollide + ' collideUp: ' + tile.collideUp + ' collideDown: ' + tile.collideDown +
+        //         '\n x: ' + tile.x + ' y: ' + tile.y +
+        //         '\n worldX: ' + tile.pixelX + ' worldY: ' + tile.pixelY);
+        //         tile.properties.viewed = true;
+        //     }
+        // }
         // End code from https://labs.phaser.io/edit.html?src=src/tilemap/tile%20properties.js
         
         // Debug text:
@@ -558,48 +560,50 @@ export default class testCourse extends Phaser.Scene {
         //     + "\nstaticEdge: " + staticEdge + " kickEdge: " + kickEdge + " kickOK: " + kickOK + " reboundRan: " + reboundRan 
         //     + " \nenable: " + sideKickBox.body.enable  + ' collided: ' + collision + ' time: ' + time
         //     + "\nArrow keys to move left/right and jump. Press UP to jump. Press SPACE to do a side kick.");
-        text1.setText(''
-            // + 'sliding: ' + this.player.sliding + ' slide time: ' + (time < this.player.ticksToSlideEnd) + ' kickdir: ' + this.player.kickDirection
-            // + '\ncanDropkick: ' + this.player.canDropKick + ' canSlide: ' + this.player.canSlide + ' canJump: ' + this.player.canJump + ' dropkicking: ' + this.player.dropKicking 
-            // + ' reboundRan: ' + this.player.reboundRan + ' kickOK: ' + this.player.kickOK + ' sideKicking: ' + this.player.sideKicking
-            // + '\n last tile: ' + this.player.tile.x
-            // + '\n kick: ' + this.player.sideKickBox.z + ' ' + this.player.dropKickBox.z
-            // + '\n list: ' + this.textures.getTextureKeys()
-            // + '\n tangent: ' + this.player.flipLastTan.x + ', ' + this.player.flipLastTan.y
-            // + '\n drag: ' + this.player.body.drag.x 
-            // + '\n angle: ' + this.player.flipAngle
-            // + '\n ticks: ' + this.player.ticks + ' time: ' + time
-            // + '\n maxY: ' + this.player.maxY
-            // + '\n crouching: ' + this.player.crouching
-            // + '\n animsResetFlag: ' + this.player.animsResetFlag
-            // + '\n animsHoldFlag: ' + this.player.animsHoldFlag
-            // + '\n YAcceleration: ' + this.player.body.acceleration.y
-            // + '\n LaserPrep: ' + this.player.laserPrep + ' CanLaser: ' + this.player.canLaser
-            // //+ 'Enemy x: ' + this.testEnemy.body.x
-            // + "\n originX: " + this.player.originX
-            // + "\n hitbox offsetX: " + this.player.body.offset.x
-            // + "\n hitbox offsetY: " + this.player.body.offset.y
-            // + "\n item X: " + this.testItem.x
-            //+ '\n Tile coords: ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.x : null) 
-            //+ ' ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.y : null) + ' ' + this.testEnemy.x
-            + '\nArrow keys to move left and right. '
-            + '\nPress Z to jump. '
-            + '\nPress X to do an attack. '
-            + '\nUP + X in the air = do a flip'
-            + '\n Kick a wall to gain extra speed'
-            + '\nDOWN + X on ground at high speed = drop kick'
-            + '\n Hold DOWN in the air = charge and fire laser'
-            + '\nPress ENTER to pause or resume.'
-            + '\nPress Q to reload map.'
-            + '\n Press M to mute/unmute');
+        // text1.setText(''
+        //     // + 'sliding: ' + this.player.sliding + ' slide time: ' + (time < this.player.ticksToSlideEnd) + ' kickdir: ' + this.player.kickDirection
+        //     // + '\ncanDropkick: ' + this.player.canDropKick + ' canSlide: ' + this.player.canSlide + ' canJump: ' + this.player.canJump + ' dropkicking: ' + this.player.dropKicking 
+        //     // + ' reboundRan: ' + this.player.reboundRan + ' kickOK: ' + this.player.kickOK + ' sideKicking: ' + this.player.sideKicking
+        //     // + '\n last tile: ' + this.player.tile.x
+        //     // + '\n kick: ' + this.player.sideKickBox.z + ' ' + this.player.dropKickBox.z
+        //     // + '\n list: ' + this.textures.getTextureKeys()
+        //     // + '\n tangent: ' + this.player.flipLastTan.x + ', ' + this.player.flipLastTan.y
+        //     // + '\n drag: ' + this.player.body.drag.x 
+        //     // + '\n angle: ' + this.player.flipAngle
+        //     // + '\n ticks: ' + this.player.ticks + ' time: ' + time
+        //     // + '\n maxY: ' + this.player.maxY
+        //     // + '\n crouching: ' + this.player.crouching
+        //     // + '\n animsResetFlag: ' + this.player.animsResetFlag
+        //     // + '\n animsHoldFlag: ' + this.player.animsHoldFlag
+        //     // + '\n YAcceleration: ' + this.player.body.acceleration.y
+        //     // + '\n LaserPrep: ' + this.player.laserPrep + ' CanLaser: ' + this.player.canLaser
+        //     // //+ 'Enemy x: ' + this.testEnemy.body.x
+        //     // + "\n originX: " + this.player.originX
+        //     // + "\n hitbox offsetX: " + this.player.body.offset.x
+        //     // + "\n hitbox offsetY: " + this.player.body.offset.y
+        //     // + "\n item X: " + this.testItem.x
+        //     //+ '\n Tile coords: ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.x : null) 
+        //     //+ ' ' + (this.testEnemy.nextTile != null ? this.testEnemy.nextTile.y : null) + ' ' + this.testEnemy.x
+        //     + '\nArrow keys to move left and right. '
+        //     + '\nPress Z to jump. '
+        //     + '\nPress X to do an attack. '
+        //     + '\nUP + X in the air = do a flip'
+        //     + '\n Kick a wall to gain extra speed'
+        //     + '\nDOWN + X on ground at high speed = drop kick'
+        //     + '\n Hold DOWN in the air = charge and fire laser'
+        //     + '\nPress ENTER to pause or resume.'
+        //     + '\nPress Q to reload map.'
+        //     + '\n Press M to mute/unmute');
 
         // Music player
         if (this.model.musicOn === true && this.model.bgMusicPlaying === false) {
             if (!this.bgMusic.isPaused) {
                 this.bgMusic.play();
+                console.log("music playing");
             }
             else {
                 this.bgMusic.resume();
+                console.log("music resuming");
             }
         
             this.model.bgMusicPlaying = true;
@@ -607,8 +611,10 @@ export default class testCourse extends Phaser.Scene {
         }
         else if (this.model.musicOn === false && this.model.bgMusicPlaying === true) {
             this.bgMusic.pause();
+            console.log("music pausing");
             this.model.bgMusicPlaying = false;
         }
+        // console.log("music events: " + this.sound.getAll('japeFoot').length); 
     } // END update
     
     /**
@@ -616,6 +622,9 @@ export default class testCourse extends Phaser.Scene {
      */
     pause() {
         this.model.gamePaused = true;
+        // Disable particles
+        this.player.emitter.pause();
+        // Pause every animation and physics update
         this.physics.world.pause();
         this.player.anims.pause();
         this.enemies.children.iterate(function(child) {
@@ -656,6 +665,7 @@ export default class testCourse extends Phaser.Scene {
             this.sfxUnpause.stop();
             this.sfxUnpause.play();
         }
+        this.player.emitter.resume();
         this.physics.world.resume();
         this.player.anims.resume();
         this.enemies.children.iterate(function(child) {

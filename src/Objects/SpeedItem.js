@@ -19,9 +19,10 @@ export default class SpeedItem extends Item {
     */
      constructor (scene, x, y, key) {
         // Basic construction function calls
-        super(scene, x, y, 'speedup');
+        super(scene, x, y, key);
         this.setTexture('speedup');
-        
+        this.textureKey = 'speedup';
+
         this.itemType = this.itemEnum.SPEEDUP;
 
         this.anims.create({

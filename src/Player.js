@@ -2,6 +2,9 @@ import 'phaser';
 import {checkWallManual} from './Objects/Enemy';
 import HealthBar from './HealthBar';
 import Item from './Objects/Item';
+import Goal from './Objects/Goal';
+import Checkpoint from './Objects/Checkpoint';
+
 /**
  * Class modeling the player character with all movement abilities.
  * This player can be added to any scene by creating a new Player object.
@@ -28,9 +31,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.enemies = enemies;
         this.items = this.scene.items;
         this.heat = this.scene.heat;
+        this.goals = this.scene.goalGroup;
+        this.checkpoints = this.scene.checkpoints;
+
         this.cam = this.scene.cameras.main;
         this.camBoundary = 32;
         this.model = this.scene.model;
+        this.nextLevel = this.scene.nextLevel;
 
         this.cam.startFollow(this, false, 1, 1); // Setting 2nd parameter to 'true' will make the camera round its position value to integers
         this.cam.setDeadzone(70, 50);
@@ -55,7 +62,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.P_WIDTH = 64; // Width of the sprite
         this.P_HEIGHT = 64; // Height of the sprite
         this.P_HITBOX_W = 24;
-        this.P_HITBOX_H = 40;
+        this.P_HITBOX_H = 38;
         this.P_WFRAC = this.P_HITBOX_W / this.P_WIDTH; // Percentage of sprite body filled horizontally by hitbox
         this.P_HFRAC = this.P_HITBOX_H / this.P_HEIGHT; // Percentage of sprite body filled vertically by hitbox
         this.P_HCROUCH = 16; // Height while crouching
@@ -95,8 +102,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.kickYOffset = 0;  // Y offset for side kick
 
         // Slide constants:
-        this.S_SLIDE_DEFAULTX = 500;
-        this.S_SLIDE_SPEEDX = 600;
+        this.S_SLIDE_DEFAULTX = 475;
+        this.S_SLIDE_SPEEDX = 575;
         this.S_SLIDE_XVEL = this.S_SLIDE_DEFAULTX; // Horizontal velocity from sliding
         this.S_SLIDE_YVEL = -100; // Vertical velocity from sliding
         this.S_SLIDE_W = 30;    // Width and height of hitbox
@@ -105,11 +112,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.S_slideYOffset = 5;
 
         // Dropkick constants:
-        this.D_MINSPEED = this.P_XVEL_SOFTMAX * 1.1;    // Minimum speed required to perform a dropkick
-        this.D_DROPKICK_XVEL = 80; // Horizontal velocity from dropkick
-        this.D_DROPKICK_YVEL = -440; // Vertical velocity
+        this.D_MINSPEED = this.P_XVEL_SOFTMAX * 1.2;    // Minimum speed required to perform a dropkick
+        this.D_DROPKICK_XVEL = 100; // Horizontal velocity from dropkick
+        this.D_DROPKICK_YVEL = -400; // Vertical velocity
         this.D_DROPKICK_W = 40;
-        this.D_DROPKICK_H = 36;
+        this.D_DROPKICK_H = 40;
         this.D_DROPKICK_Y = -400; // Vertical boost after rebound
         this.D_SLOWDOWN = 2.0;  // Slowdown after hitting something with a dropkick
         this.D_dropXOffset = 30;
@@ -119,6 +126,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.F_FLIP_VEL = 500;
         this.F_FLIP_W = 30;
         this.F_FLIP_H = 30;
+        this.F_FLIP_ATTACK_W = 50; // Two hitboxes layered on top of each other. One handles terrain collision, the other handles enemies
+        this.F_FLIP_ATTACK_H = 45;
         this.F_FLIP_RADIUS = 36; // Radius of arc representing the flip's trajectory
         this.F_FLIP_FRONT = 170; // Start and end angles of arc
         this.F_FLIP_BACK = 340;
@@ -148,6 +157,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.recoilVelocity = 300;
         this.invincible = false;
         this.alive = true;
+        this.controllable = true;
 
         // Animation variables:
         this.animsResetFlag = false;
@@ -170,7 +180,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.tickCount = 0;
         this.ticksToJumpEnd = 0;
-        this.maxJumpTicks = 13 * this.INTERVAL; // This variable is best for changing jump height.
+        this.maxJumpTicks = 12 * this.INTERVAL; // This variable is best for changing jump height.
         this.isJumping = false;
         this.canJump = false;
         this.inAir = false;
@@ -194,13 +204,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.maxDropTicks = 30 * this.INTERVAL;
         this.ticksToDropKickEnd = 0;
         this.canDropKick = false;
+        this.dropKickRan = false; // Used to make sure you can't dropkick twice in one jump under normal circumstances
+        this.dropKickOverride = false; // If you dropkick into a wall and jump, this flag will set, allowing you to dropkick again without enough speed
         this.dropKicking = false;
-        this.dropKickBounce = false;
+        this.dropKickBounce = false; // Flag that's set if you dropkick into a wall
         this.dropKickDelay = 0; // Next two variables are used to delay the 'on ground' check for the drop kick
         this.dropKickDelayTicks = 5 * this.INTERVAL;
-        this.maxSlowTicks = 15 * this.INTERVAL;
+        this.maxSlowTicks = 20 * this.INTERVAL;
         this.ticksToSlowEnd = 0;
-        this.slowTime = false;
+        this.slowTime = false; // Flag that's set for the duration of the slowed time effect
 
         this.maxFlipTicks = 30 * this.INTERVAL;
         this.ticksToFlipEnd = 0;
@@ -215,13 +227,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.canSlide = true;
         this.sliding = true;
 
-        this.laser = null
+        this.laser = null; // Reference to the laser hitbox
         this.laserPrep = false;
         this.lasering = false;
         this.canLaser = false;
 
         this.canDoubleJump = false;
-        this.doubleJumpReady = false;
+        this.doubleJumpReady = false; // Used to see if you should be able to double jump after a normal jump or falling off an edge
 
         this.P_SPEEDUP = this.D_MINSPEED * 1.3;
         
@@ -244,6 +256,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             fill: '#ffffff'
         });
         this.itemsDisplay.setScrollFactor(0);
+        this.itemsDisplay.setDepth(10);
 
         
 
@@ -406,7 +419,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.sfxDropKick = this.scene.sound.add('dropKick', { volume: 0.55, loop: false });
         this.sfxDropKickRebound = this.scene.sound.add('dropKickRebound', { volume: 0.55, loop: false });
         this.sfxLaser = this.scene.sound.add('playerLaser', { volume: 0.55, loop: true });
-        this.sfxHurt = this.scene.sound.add('hurt', { volume: 0.35, loop: false });
+        this.sfxHurt = this.scene.sound.add('hurt', { volume: 0.1, loop: false });
         this.sfxItem = this.scene.sound.add('powerupFound', { volume: 0.65, loop: false });
         this.sfxLaserItem = this.scene.sound.add('laserFound', { volume: 0.65, loop: false });
         this.sfxJumpItem = this.scene.sound.add('doublejumpFound', { volume: 0.65, loop: false });
@@ -414,6 +427,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.sfxDie = this.scene.sound.add('lose', { volume: 0.55, loop: false });
         this.sfxWin = this.scene.sound.add('win', { volume: 0.55, loop: false });
+        this.sfxCheckpoint = this.scene.sound.add('checkpoint', { volume: 0.55, loop: false });
 
         // For some reason, the sprite renders the pixels at the bottom of the row above it.
         // This crops 1 pixel from the top of the sprite to stop this.
@@ -431,10 +445,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Make another group to hold the laser sprites
         this.sprites = this.scene.add.group();
-        this.sideKickBox = this.scene.add.rectangle(-10, -10, this.K_SIDEKICK_W, this.K_SIDEKICK_H);
-        this.slideBox = this.scene.add.rectangle(-10, -10, this.S_SLIDE_W, this.S_SLIDE_H);
-        this.dropKickBox = this.scene.add.rectangle(-10,-10, this.D_DROPKICK_W, this.D_DROPKICK_H);
-        this.flipBox = this.scene.add.rectangle(-10, -10 , this.F_FLIP_W, this.F_FLIP_H);
+        this.sideKickBox = this.scene.add.rectangle(0, 0, this.K_SIDEKICK_W, this.K_SIDEKICK_H);
+        this.slideBox = this.scene.add.rectangle(0, 0, this.S_SLIDE_W, this.S_SLIDE_H);
+        this.dropKickBox = this.scene.add.rectangle(0,0, this.D_DROPKICK_W, this.D_DROPKICK_H);
+        this.flipBox = this.scene.add.rectangle(0, 0, this.F_FLIP_W, this.F_FLIP_H);
+        this.flipAttackBox = this.scene.add.rectangle(0, 0, this.F_FLIP_ATTACK_W, this.F_FLIP_ATTACK_H);
         
         // Begin modified code from https://labs.phaser.io/edit.html?src=src/paths/circle%20path.js
         // this.flipPath = new Phaser.Curves.Path();
@@ -456,11 +471,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.pHitboxes.add(this.slideBox);
         this.pHitboxes.add(this.dropKickBox);
         this.pHitboxes.add(this.flipBox);
+        this.pHitboxes.add(this.flipAttackBox);
 
         this.sideKickBox.setActive(false);
         this.slideBox.setActive(false);
         this.dropKickBox.setActive(false);
         this.flipBox.setActive(false);
+        this.flipAttackBox.setActive(false);
 
         // The hitbox's position changes, but it does not actually have velocity.
         // This means it will not actually "collide" with anything, but it can still overlap with things.
@@ -493,6 +510,28 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.softCollider = this.scene.physics.add.overlap(this.pHitboxes, this.solids, this.breakSoft, null, this);
         this.hardCollider = this.scene.physics.add.overlap(this.dropKickBox, this.solids, this.breakHard, null, this);
 
+        // Goal collider
+        this.goalCollider = this.scene.physics.add.overlap(this, this.goals, this.hitGoal, null, this);
+
+        // Checkpoint collider
+        this.checkpointCollider = this.scene.physics.add.overlap(this, this.checkpoints, this.hitCheckpoint, null, this);
+
+        // Begin modified code from https://labs.phaser.io/edit.html?src=src/game%20objects/particle%20emitter/create%20emitter.js
+        // Particle emitter
+        //  First create a particle manager
+        //  A single manager can be responsible for multiple emitters
+        //  The manager also controls which particle texture is used by _all_ emitter
+        this.particles = this.scene.add.particles('dKickParticle');
+
+        this.emitter = this.particles.createEmitter();
+        // setSpeed changes how fast the particles travel
+        this.emitter.setSpeed(30);
+        // setFrequency has the emitter generate 3 particles every 300 milliseconds
+        this.emitter.setFrequency(800, 2);
+        // Stop the emitter
+        this.emitter.stop();
+        // End modified code from https://labs.phaser.io/edit.html?src=src/game%20objects/particle%20emitter/create%20emitter.js
+
 
         this.alignRan = 0;
         this.reboundRan = 0;
@@ -508,7 +547,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.ticks += delta;
 
         /** Actions */
-        if (this.alive) {
+        if (this.controllable) {
             /** Left and right movement, only when not crouching */
             /** @Move */
             if (this.cursors.left.isDown && ((!this.crouching && !this.sliding) || !this.body.onFloor()))
@@ -569,9 +608,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
             /** @Jump */ 
             if (this.cursors.pressed(this.cursors.jump)
-                && (this.canJump || this.doubleJumpReady) && !this.isJumping)
+                && (this.canJump || this.doubleJumpReady) && !this.isJumping
+                && !(this.crouching && this.checkCeiling())) // Ensure you can't jump while crouching in a 1-high space
             {
-                console.log("Jump ran");
+                // console.log("Jump ran");
                 this.isJumping = true;
                 // Handle the double jump
                 if (this.doubleJumpReady) {
@@ -625,7 +665,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             /** Do a slide with attack on ground. You can still jump even if airborne after doing this move! */
             /** @Slide */
             if (this.cursors.pressed(this.cursors.attack) && this.canAttack
-                && ((this.cursors.down.isDown && !this.body.onFloor()) 
+                && ((this.cursors.down.isDown && !this.body.onFloor() && !this.canDropKick) 
                     || (!(this.canDropKick && this.cursors.down.isDown) && this.body.onFloor()))
                 && this.canSlide && !this.sliding && this.xFacing !== this.xDirection.NONE && !this.dropKicking
                 && (this.cursors.left.isDown || this.cursors.right.isDown)) 
@@ -770,11 +810,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 }
             }
 
-            /** Drop kick: Down + attack on the ground with some speed built up */
+            /** Drop kick: Down + attack on the ground or air with some speed built up
+             * If you hit a wall, you can jump out of the recoil and dropkick again!
+             */
             /** @DropKick */
-            if (this.cursors.down.isDown && this.cursors.pressed(this.cursors.attack) && this.body.onFloor()
-                && !this.sliding && this.xFacing !== this.xDirection.NONE
-                && this.canDropKick && this.canAttack)
+            if (this.cursors.down.isDown && this.cursors.pressed(this.cursors.attack)
+                && (this.dropKickOverride || 
+                (!this.sliding && this.xFacing !== this.xDirection.NONE
+                && this.canDropKick && this.canAttack && !this.dropKicking && !this.dropKickRan)))
             {
                 // Sound effect
                 if (this.model.soundOn) {
@@ -784,11 +827,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.canAttack = false;
                 this.dropKicking = true;
                 this.canDropKick = false;
+                this.dropKickRan = true;
+                this.dropKickOverride = false;
                 this.canJump = false;
                 this.canKick = false;
                 this.canSlide = false;
                 this.crouching = false;
-                this.pvx = Math.abs(this.body.velocity.x) + this.D_DROPKICK_XVEL;
+                this.pvx = Math.max(this.D_MINSPEED, Math.abs(this.body.velocity.x) + this.D_DROPKICK_XVEL);
                 if (this.xFacing === this.xDirection.RIGHT)
                     this.body.setVelocityX(this.pvx);
                 if (this.xFacing === this.xDirection.LEFT)
@@ -801,6 +846,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.dropKickDelay = this.ticks + this.dropKickDelayTicks;
                 // this.alignPlayerDropKick();
             }
+            
             if (this.dropKicking && this.ticks < this.ticksToDropKickEnd)
             {
                 this.alignPlayerDropKick();
@@ -834,6 +880,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.canSlide = false;
 
                 this.flipBox.setActive(true);
+                this.flipAttackBox.setActive(true);
                 this.atkDelayEnd = this.ticks + this.attackDelay;
                 if (this.model.soundOn === true) {
                     this.sfxFlip.play();
@@ -847,12 +894,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                     this.flipping = false;
                     this.pathIndex = 0;
                     this.flipBox.setActive(false);
+                    this.flipAttackBox.setActive(false);
                 }
             }
             else {
                 this.flipping = false;
                 this.pathIndex = 0;
                 this.flipBox.setActive(false);
+                this.flipAttackBox.setActive(false);
                 // this.kickDirection = this.xDirection.NONE;
             }
             if (this.cursors.attack.isUp && !this.flipping) {
@@ -868,6 +917,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
 
             // CROUCH: Decrease height when crouching
+            /** @crouch */
             if (this.crouching) {
                 // console.log("Crouch size");
                 this.body.setSize(Math.floor(this.P_WIDTH * this.P_WFRAC), this.P_HCROUCH, true);
@@ -909,6 +959,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
 
             // IDLE: Player is slowed down more on the ground
+            /** @onFloor */
             if (this.body.onFloor()){
                 if (this.canDropKick && !this.sliding && !this.foundSpeedUp) {
                     this.setDragX(this.P_DRAG_FAST);
@@ -921,7 +972,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.canSlide = true;
                 this.canLaser = true;
                 this.isJumping = false;
+                this.dropKickRan = false;
                 this.dropKickBounce = false;
+                this.dropKickOverride = false;
                 if (this.foundDoubleJump) {
                     this.canDoubleJump = true;
                 }
@@ -934,7 +987,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
 
             // Check to see if player is fast enough to perform dropkick
-            if (Math.abs(this.body.velocity.x) >= this.D_MINSPEED) {
+            if (Math.abs(this.body.velocity.x) >= this.D_MINSPEED && !this.dropKicking) {
                 this.canDropKick = true;
             }
             else if (!this.dropKicking) {
@@ -978,6 +1031,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                     // Resume time and jump
                     this.scene.physics.world.timeScale = 1.0;
                     this.slowTime = false;
+                    this.dropKickRan = false;
+                    this.dropKickOverride = true;
                 }
                 else if (this.ticks > this.ticksToSlowEnd || this.body.onFloor()) {
                     // Resume time
@@ -1055,6 +1110,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.anims.play('hurt', true);
             }
 
+            /** Handle particle emitter to indicate when a dropkick is possible */
+            if (this.dropKickOverride || this.canDropKick || this.dropKicking) {
+                // console.log("Can drop kick");
+                this.emitter.start();
+                // this.emitter.resume();
+                this.emitter.startFollow(this);
+            }
+            else {
+                // this.emitter.killAll();
+                this.emitter.stop();
+            }
+
             // Update player-based GUI elements
             this.healthBar.setHP(this.HP);
             this.updateItemDisplay();
@@ -1072,6 +1139,24 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     /** Helper methods */
 
     /**
+     * Check to see if the player is directly underneath a ceiling tile.
+     * @returns true if the block immediately above the player is a solid ceiling tile, false otherwise
+     */
+    checkCeiling() {
+        var found = false;
+        // Check the tiles directly above the player for solid, impassable tiles
+        this.map.getTilesWithinWorldXY(this.body.x, this.body.y - 20, this.body.width, 2, {}, this.cam, this.solids).forEach((tile) => {
+            if (tile.properties.solid && !tile.properties.semisolid) {
+                found = true;
+                console.log("Tile at " + tile.pixelX + ", " + tile.pixelY + "is solid");
+            }
+            else {
+                console.log("Tile at " + tile.pixelX + ", " + tile.pixelY + "is not solid");
+            }
+        });
+        return found;
+    }
+    /**
      * Check to see if the player is doing an attack.
      * @return true if the player is side kicking, drop-kicking, sliding, flipping, or lasering.
      */
@@ -1086,7 +1171,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      */
     alignPlayerKick() {
         this.animsResetFlag = true;
-        console.log("running alignPlayerKick");
+        // console.log("running alignPlayerKick");
         this.kickDirection = this.xDirection.NONE;
         if (this.xFacing == this.xDirection.RIGHT || this.kickDirection == this.xDirection.RIGHT) {
             this.setOrigin(0.25, 0.5);
@@ -1105,7 +1190,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      */
     alignPlayerSlide() {
         this.animsResetFlag = true;
-        console.log("running alignPlayerSlide");
+        // console.log("running alignPlayerSlide");
         this.kickDirection = this.xDirection.NONE;
         if (this.xFacing == this.xDirection.RIGHT || this.kickDirection == this.xDirection.RIGHT) {
             this.setOrigin(0.25, 0.5);
@@ -1126,9 +1211,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      */
      alignPlayerDropKick() {
         this.animsResetFlag = true;
-        console.log("running alignPlayerDropKick");
+        // console.log("running alignPlayerDropKick");
         if (this.slowTime) {
-            console.log("In slow time");
+            // console.log("In slow time");
         }
         this.kickDirection = this.xDirection.NONE;
         if (this.xFacing == this.xDirection.RIGHT || this.kickDirection == this.xDirection.RIGHT) {
@@ -1241,6 +1326,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.flipAngle = Math.atan(this.flipLastTan.y / this.flipLastTan.x);
         
         this.flipBox.setPosition(this.pathVector.x, this.pathVector.y);
+        this.flipAttackBox.setPosition(this.pathVector.x, this.pathVector.y);
         
         // Increment the path index until the hitbox reaches the end of the arc
         this.pathIndex = Math.min(this.pathIndex + this.F_FLIP_SPEED, 1);
@@ -1325,6 +1411,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.setVelocityX(Math.max(this.K_KICK_V_STANDING, pvx + this.K_KICK_VEL));
                 this.lastKick_V = pvx + this.K_KICK_VEL;
                 this.xFacing = this.xDirection.RIGHT;
+                this.setFlipX(false);
                 // temporarily suppress left movement?
                 // reboundRan++;
             }
@@ -1338,6 +1425,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.setVelocityX(Math.min(-this.K_KICK_V_STANDING, pvx - this.K_KICK_VEL));
                 this.lastKick_V = pvx - this.K_KICK_VEL;
                 this.xFacing = this.xDirection.LEFT;
+                this.setFlipX(true);
                 // temporarily suppress right movement?
                 // reboundRan++;
             }
@@ -1403,11 +1491,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         var vy = 0;
         if (this.flipReady && this.flipping && tile.properties.solid && !tile.properties.semisolid && !tile.properties.soft) {
             // Flip vector calculated in flipRotation method
-            console.log('vx: ' + vx);
+            // console.log('vx: ' + vx);
 
             // Modify vx at earliest part of the flip
             if (this.pathIndex <= 0.2) {
-                console.log("pathIndex X check working");
+                // console.log("pathIndex X check working");
                 if (this.kickDirection == this.xDirection.RIGHT)
                     vx = -this.flipReboundVec.x - this.F_FLIP_VEL;
                 else if (this.kickDirection == this.xDirection.LEFT)
@@ -1419,7 +1507,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
             // Modify vy at latest part of the flip
             if (this.pathIndex >= 0.7) {
-                console.log("pathIndex Y check working");
+                // console.log("pathIndex Y check working");
                 vy = this.flipReboundVec.y - this.F_FLIP_VEL;
             }
             else {
@@ -1432,9 +1520,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.flipping = false;
             this.reboundLanded = true;
             this.reboundRan++;
-            console.log('pathIndex: ' + this.pathIndex);
-            console.log('vx: ' + vx);
-            console.log('vy: ' + vy);
+            // console.log('pathIndex: ' + this.pathIndex);
+            // console.log('vx: ' + vx);
+            // console.log('vy: ' + vy);
         }
 
         return true;
@@ -1457,7 +1545,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.kickEdge = hitbox.body.position.x + hitbox.body.width;
             frontTile = this.map.getTileAtWorldXY(tile.pixelX + 32, tileHeight);
             if (frontTile != null) {
-                console.log(frontTile.x + ',' + frontTile.y);
+                // console.log(frontTile.x + ',' + frontTile.y);
             }
             if (this.kickEdge > this.staticEdge 
                 && ((frontTile == null || !frontTile.properties.semisolid) || this.body.y + this.body.height > tile.pixelY)) {
@@ -1470,7 +1558,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.kickEdge = hitbox.body.position.x;
             frontTile = this.map.getTileAtWorldXY(tile.pixelX - 32, tileHeight);
             if (frontTile != null) {
-                console.log(frontTile.x + ',' + frontTile.y);
+                // console.log(frontTile.x + ',' + frontTile.y);
             }
             if (this.kickEdge < this.staticEdge 
                 && ((frontTile == null || !frontTile.properties.semisolid) || this.body.y + this.body.height > tile.pixelY)) {
@@ -1536,17 +1624,17 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
         var tileY = this.map.getTileAtWorldXY(this.body.position.x, this.body.position.y + newHeight + 32);
         var floorY = newHeight; 
-        console.log("Look for tile at: " + (this.body.position.y + newHeight + 32));
-        if (tileY != null && tileY.properties.solid) {
-            floorY = Math.round(tileY.pixelY - this.body.position.y) - 12;
-            console.log("Floor tile found: " + tileY.pixelY);
-            console.log("FloorY is now " + floorY);
-            console.log("Compare to newHeight: " + newHeight);
+        // console.log("Look for tile at: " + (this.body.position.y + newHeight + 32));
+        // if (tileY != null && tileY.properties.solid) {
+        //     floorY = Math.round(tileY.pixelY - this.body.position.y) - 12;
+        //     // console.log("Floor tile found: " + tileY.pixelY);
+        //     // console.log("FloorY is now " + floorY);
+        //     // console.log("Compare to newHeight: " + newHeight);
 
-        }
-        else if (tileY == null) {
-            console.log("Tile is null");
-        }
+        // }
+        // else if (tileY == null) {
+        //     // console.log("Tile is null");
+        // }
 
         this.laser.setSize(this.L_WIDTH, floorY);
         this.laser.body.setSize(this.L_WIDTH, floorY);
@@ -1587,7 +1675,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
             else if (this.kickDirection === this.xDirection.LEFT)
                 vx = -this.K_KICK_VEL;
-            vy = this.K_SIDEKICK_Y;
+            vy = this.K_SIDEKICK_Y * 2;
+            vx *= 1.2;
             hit = true;
         }
 
@@ -1607,14 +1696,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 vx = this.S_SLIDE_XVEL;
             else if (this.kickDirection == this.xDirection.LEFT)
                 vx = -this.S_SLIDE_XVEL;
-            vy = this.S_SLIDE_YVEL;
+            vy = this.S_SLIDE_YVEL * 2;
             hit = true;
         }
 
         // Handle flip
-        if (this.flipping && this.scene.physics.overlap(this.flipBox, enemy)) {
+        if (this.flipping && this.scene.physics.overlap(this.flipAttackBox, enemy)) {
             vx = -this.flipReboundVec.x;
-            vy = -this.flipReboundVec.y;
+            vy = -this.flipReboundVec.y * 2;
             hit = true;
         }
 
@@ -1626,8 +1715,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         if (hit && enemy.recoilVulnerable) {
             // console.log("PLAYER HIT");
-            enemy.hit(vx, vy * 2);
-            console.log(vx);
+            enemy.hit(vx, vy);
+            // console.log(vx);
         }
     }
 
@@ -1691,7 +1780,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      */
     heatDmg(body, tile) {
         if ((tile.properties.heat || tile.properties.superheat) && !this.heatTaken) {
-            console.log("HeatDmg taken");
+            // console.log("HeatDmg taken");
             if (tile.properties.superheat) {
                 this.recover(this.heatDmgRate * 2);
             }
@@ -1744,14 +1833,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.hurtRan++;
                 vy = Math.max(Math.abs(this.body.velocity.y), recoilY * 0.5);
             }
-            this.resetState();
-            this.body.setVelocity(vx, vy);
-            this.HP = Math.min(this.maxHP, this.HP - amount);
-            this.ticksToDamageEnd = this.ticks + this.iFrames;
-            this.hurtAnimEnd = this.ticks + this.hurtAnimTicks;
-            if (this.model.soundOn === true) {
-                this.sfxHurt.play();
+            if (this.alive) {
+                this.resetState();
+                if (this.model.soundOn === true) {
+                    this.sfxHurt.play();
+                }
+                this.HP = Math.min(this.maxHP, this.HP - amount);
+                this.ticksToDamageEnd = this.ticks + this.iFrames;
+                this.hurtAnimEnd = this.ticks + this.hurtAnimTicks;
             }
+            
+            this.body.setVelocity(vx, vy);
+            
+            
         }
     }
 
@@ -1765,6 +1859,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.model.soundOn === true) {
             this.sfxDie.play();
         }
+        this.HP = 0;
         this.anims.play('hurt', true);
         //the slide animation looks like the player died
         // I beg to differ!!!!!!!!!!
@@ -1777,8 +1872,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // this.jump = false;
         // this.maxJumpTicks = false;
         // this.P_JUMP = false;
-        // setTimeout(() => {this.scene.scene.restart(); // Change functionality later
-        // }, 2000);
+        setTimeout(() => {
+            if (this.scene instanceof Phaser.Scene)
+                this.scene.scene.restart(); 
+        }, 4000);
     
         // Additions by Tony Imbesi: Stop camera and reset state
         this.resetState();
@@ -1788,8 +1885,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.setVelocityY(-(this.body.velocity.y * this.body.velocity.y));
         this.body.setAcceleration(0, 0);
         // Setting this flag disables all user input without having to edit the controller object. 
-        // All actions that check for keys pressed are inside an if (this.alive) statement.
+        // All actions that check for keys pressed are inside an if (this.controllable) statement.
         this.alive = false; 
+        this.controllable = false;
         this.setAllColliders(false);
         // End code by Tony Imbesi
     }
@@ -1896,17 +1994,85 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
+     * Handles touching the goal UFO.
+     * The player model disappears and is no longer controllable, and the UFO flies away.
+     * Shortly after, the next course loads.
+     * I found out from testing that you can still trigger this event and clear the course if you die
+     * and your body collides with it before the scene restarts. This is hilarious and will stay in the game.
+     * 
+     * @author Tony Imbesi
+     * @version 4/20/2022
+     * 
+     * @param {Player} body the player
+     * @param {Goal} goal the goal UFO
+     */
+    hitGoal(body, goal) {
+        this.setVisible(false);
+        goal.flyAway(this.body.velocity.x, this.body.velocity.y);
+        if (this.model.soundOn === true) {
+            this.sfxWin.play();
+        }
+        this.controllable = false;
+        this.model.checkpointSet = false;
+        this.model.spawnX = undefined;
+        this.model.spawnY = undefined;
+        // Save progress: increase the levelCleared number if you cleared a later course
+        if (Number(localStorage.levelCleared) < this.scene.clearId) {
+            localStorage.levelCleared = this.scene.clearId;
+        }
+
+        // Begin modified code from Josiah Cornelius
+        setTimeout(() => {
+            this.scene.scene.start(this.nextLevel);;
+        }, 3000);
+        // End modified code from Josiah Cornelius
+        this.disableBody();
+        
+    }
+
+    /**
+     * Handles touching a checkpoint flag.
+     * The checkpoint disappears and its coordinates are passed to the global model
+     * for reference later. When the player respawns, those coordinates will be used instead
+     * of the spawnpoint coordinates.
+     * 
+     * @author Tony Imbesi
+     * @version 4/20/2022
+     * 
+     * @param {Player} body the player
+     * @param {Checkpoint} checkpoint the checkpoint flag
+     */
+    hitCheckpoint(body, checkpoint) {
+        // console.log('hitCheckpoint ran');
+        if (!checkpoint.triggered) {
+            this.HP = this.maxHP;
+            checkpoint.trigger(this.body.velocity.x);
+            if (this.model.soundOn === true) {
+                this.sfxCheckpoint.play();
+            }
+            this.model.spawnX = checkpoint.x;
+            this.model.spawnY = checkpoint.y - 12;
+            this.model.checkpointSet = true;
+        }
+    }
+
+
+    /**
      * Resets every significant state variable.
      */
     resetState() {
         this.cam.startFollow(this, false, 1, 1); // Setting 2nd parameter to 'true' will make the camera round its position value to integers
         this.cam.setDeadzone(70, 50);
         this.cam.setFollowOffset(0, 0);
+        this.emitter.stop();
         this.alive = true;
+        this.controllable = true;
         this.canAttack = false;
         this.canJump = false;
         this.canSlide = false;
         this.canDropKick = false;
+        this.dropKickRan = false;
+        this.dropKickOverride = false;
         this.canFlip = false;
         this.sideKicking = false;
         this.dropKicking = false;
