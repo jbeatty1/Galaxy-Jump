@@ -78,7 +78,7 @@ export default class PlayerController {
     changeControls(action, newControl) {
         switch (action) {
             case this.actions.LEFT:
-                this.left = this.scene.input.keyboard.addKey(newControl);
+                this.left = scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.RIGHT:
                 this.right = scene.input.keyboard.addKey(newControl);
