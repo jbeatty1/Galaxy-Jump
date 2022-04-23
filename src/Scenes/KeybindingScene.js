@@ -45,7 +45,6 @@ export default class KeybindingScene extends Phaser.Scene {
 
 
   updateControls(){
-    this.model = this.sys.game.globals.model;
 
     }
 }
