@@ -34,12 +34,12 @@ export default class KeybindingScene extends Phaser.Scene {
 
     this.newJumpControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newJumpControl);
-      this.controls.newJumpControl(4,newJumpControl);
+      this.controls.changeControls(4,newJumpControl);
     })
 
     this.newAttackControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newAttackControl);
-      this.controls.newAttackControl(5,newAttackControl);
+      this.controls.changeControls(5,newAttackControl);
     })
   }
 
