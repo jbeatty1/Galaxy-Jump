@@ -59,22 +59,6 @@ export default class PlayerController {
         this.mute = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
         // End modified code from https://labs.phaser.io/edit.html?src=src/input/keyboard/add%20key.js
     }
-
-    updateLeftControl(newControl){
-    this.left  = scene.input.keyboard.addKey(newControl);
-    }
-
-    updateRightControl(newControl){
-    this.right  = scene.input.keyboard.addKey(newControl);
-
-    }
-    updateKickControl(newControl){
-    this.jump  = scene.input.keyboard.addKey(newControl);
-    }
-
-    updateAttackControl(newControl){
-    this.attack  = scene.input.keyboard.addKey(newControl);
-    }
     /**
      * Returns if the key was held down for no longer than a time in milliseconds.
      *
@@ -91,28 +75,28 @@ export default class PlayerController {
      * @param {number | string} action the action to change the key input for, according to the this.actions enumeration
      * @param {number} keycode the code for the key to bind the action to
      */
-    changeControls(action, keycode) {
+    changeControls(action, newControl) {
         switch (action) {
             case this.actions.LEFT:
-                this.left = scene.input.keyboard.addKey(keycode);
+                this.left = this.scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.RIGHT:
-                this.right = scene.input.keyboard.addKey(keycode);
+                this.right = scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.UP:
-                this.up = scene.input.keyboard.addKey(keycode);
+                this.up = scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.DOWN:
-                this.down = scene.input.keyboard.addKey(keycode);
+                this.down = scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.JUMP:
-                this.jump = scene.input.keyboard.addKey(keycode);
+                this.jump = scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.ATTACK:
-                this.attack = scene.input.keyboard.addKey(keycode);
+                this.attack = scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.PAUSE:
-                this.pause = scene.input.keyboard.addKey(keycode);
+                this.pause = scene.input.keyboard.addKey(newControl);
                 break;
             default:
                 // Nothing. Too bad!

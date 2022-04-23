@@ -9,7 +9,8 @@ export default class KeybindingScene extends Phaser.Scene {
   }
 
   create () {
-    this.controls = new PlayerController();
+    this.controls = this.sys.game.globals.controls;
+    this.controls.addControls(this);
     this.controlText = this.add.text(500, 70, 'Control Layout', { fontSize: '32px', fill: '#fff' });
     this.backButton = new Button(this, 100, 50, 'blueButton1', 'blueButton2', 'Back', 'Title');
     this.rightControlText = this.add.text(200, 200, 'Right Key(move forward)', { fontSize: 24 });
@@ -21,25 +22,24 @@ export default class KeybindingScene extends Phaser.Scene {
     this.newJumpControl = this.add.text(700, 380, 'Set button',  { fontSize: 24,   color:'blue'});
     this.newAttackControl = this.add.text(700, 470, 'Set button',  { fontSize: 24 , color:'blue'});
 
-
     this.newLeftControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newLeftControl);
-      this.controls.updateLeftControl(newLeftControl);
+      this.controls.changeControls(0,newLeftControl)
     })
 
     this.newRightControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newRightControl);
-      this.controls.updateRightControl(newRightControl);
+      this.controls.changeControls(1,newRightControl);
     })
 
     this.newJumpControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newJumpControl);
-      this.controls.updateJumpControl(newJumpControl);
+      this.controls.newJumpControl(4,newJumpControl);
     })
 
     this.newAttackControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newAttackControl);
-      this.controls.updateAttackControl(newAttackControl);
+      this.controls.newAttackControl(5,newAttackControl);
     })
   }
 
