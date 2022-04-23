@@ -1,7 +1,6 @@
 //code by Josiah
 import 'phaser';
 import Button from '../Objects/Button';
-import PlayerController from '../PlayerController';
 
 export default class KeybindingScene extends Phaser.Scene {
   constructor () {
@@ -24,27 +23,25 @@ export default class KeybindingScene extends Phaser.Scene {
 
     this.newLeftControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newLeftControl);
-      this.controls.changeControls(0,newLeftControl)
+      this.controls.changeControls(0,this.newLeftControl)
+
     })
 
     this.newRightControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newRightControl);
-      this.controls.changeControls(1,newRightControl);
+      this.controls.changeControls(1,this.newRightControl);
     })
 
     this.newJumpControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newJumpControl);
-      this.controls.changeControls(4,newJumpControl);
+      this.controls.changeControls(4,this.newJumpControl);
     })
 
     this.newAttackControl.setInteractive().on('pointerdown', () => {
       this.rexUI.edit(this.newAttackControl);
-      this.controls.changeControls(5,newAttackControl);
+      this.controls.changeControls(5,this.newAttackControl);
     })
+
   }
 
-
-  updateControls(){
-
-    }
 }

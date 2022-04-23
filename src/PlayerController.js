@@ -78,25 +78,25 @@ export default class PlayerController {
     changeControls(action, newControl) {
         switch (action) {
             case this.actions.LEFT:
-                this.left = scene.input.keyboard.addKey(newControl);
+                this.left = this.scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.RIGHT:
-                this.right = scene.input.keyboard.addKey(newControl);
+                this.right = this.scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.UP:
-                this.up = scene.input.keyboard.addKey(newControl);
+                this.up = this.scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.DOWN:
-                this.down = scene.input.keyboard.addKey(newControl);
+                this.down = this.scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.JUMP:
-                this.jump = scene.input.keyboard.addKey(newControl);
+                this.jump = this.scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.ATTACK:
-                this.attack = scene.input.keyboard.addKey(newControl);
+                this.attack = this.scene.input.keyboard.addKey(newControl);
                 break;
             case this.actions.PAUSE:
-                this.pause = scene.input.keyboard.addKey(newControl);
+                this.pause = this.scene.input.keyboard.addKey(newControl);
                 break;
             default:
                 // Nothing. Too bad!
