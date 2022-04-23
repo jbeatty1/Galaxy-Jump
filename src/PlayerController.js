@@ -9,7 +9,6 @@ import Player from './Player';
  * @version 3/1/2022
  */
 export default class PlayerController {
-    
     /**
      * These are all the properties to use.
      * They will be initialized properly using the addControls method.
@@ -26,7 +25,7 @@ export default class PlayerController {
         this.pause = null;
         this.shift = null;
 
-        
+
         this.actions = {
             LEFT: 0,
             RIGHT: 1,
@@ -42,7 +41,7 @@ export default class PlayerController {
 
     /**
      * Adds the controls to the current scene.
-     * 
+     *
      * @param {Phaser.Scene} scene the current Phaser scene
      */
     addControls(scene) {
@@ -61,9 +60,24 @@ export default class PlayerController {
         // End modified code from https://labs.phaser.io/edit.html?src=src/input/keyboard/add%20key.js
     }
 
+    updateLeftControl(newControl){
+    this.left  = scene.input.keyboard.addKey(newControl);
+    }
+
+    updateRightControl(newControl){
+    this.right  = scene.input.keyboard.addKey(newControl);
+
+    }
+    updateKickControl(newControl){
+    this.jump  = scene.input.keyboard.addKey(newControl);
+    }
+
+    updateAttackControl(newControl){
+    this.attack  = scene.input.keyboard.addKey(newControl);
+    }
     /**
      * Returns if the key was held down for no longer than a time in milliseconds.
-     * 
+     *
      * @param {Phaser.Input.Keyboard.Key} key the key to pass
      * @returns true if the key was just pressed, false otherwise
      */
@@ -73,7 +87,7 @@ export default class PlayerController {
 
     /**
      * Changes the keybinding for one of the key inputs.
-     * 
+     *
      * @param {number | string} action the action to change the key input for, according to the this.actions enumeration
      * @param {number} keycode the code for the key to bind the action to
      */
@@ -101,7 +115,7 @@ export default class PlayerController {
                 this.pause = scene.input.keyboard.addKey(keycode);
                 break;
             default:
-                // Nothing. Too bad!        
+                // Nothing. Too bad!
         }
     }
 
