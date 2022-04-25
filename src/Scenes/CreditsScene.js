@@ -11,11 +11,13 @@ export default class CreditsScene extends Phaser.Scene {
   }
 
   create () {
+    // Begin code from Tony Imbesi
     this.sound.stopAll();
     this.sound.removeAll();
     this.sys.game.globals.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
     if (this.sys.game.globals.model.musicOn === true)
       this.sys.game.globals.bgMusic.play();
+    // end code from Tony Imbesi
 
     this.backButton = new Button(this, 100, 50, 'blueButton1', 'blueButton2', 'MENU', 'Title');
     this.credits = this.add.text(config.width/2  - 200, config.height/2 - 230,  'Credits', { fontSize: '32px', fill: '#fff' });
