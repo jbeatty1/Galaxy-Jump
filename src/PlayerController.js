@@ -287,7 +287,79 @@ export default class PlayerController {
             case Phaser.Input.Keyboard.KeyCodes.Z:
             text = "Z";
             break;
-                    
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_ZERO:
+            text = "NUMPAD_ZERO";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_ONE:
+            text = "NUMPAD_ONE";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_TWO:
+            text = "NUMPAD_TWO";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_THREE:
+            text = "NUMPAD_THREE";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_FOUR:
+            text = "NUMPAD_FOUR";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_FIVE:
+            text = "NUMPAD_FIVE";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_SIX:
+            text = "NUMPAD_SIX";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_SEVEN:
+            text = "NUMPAD_SEVEN";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_EIGHT:
+            text = "NUMPAD_EIGHT";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_NINE:
+            text = "NUMPAD_NINE";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_ADD:
+            text = "NUMPAD_+";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.NUMPAD_SUBTRACT:
+            text = "NUMPAD_-";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.SEMICOLON || Phaser.Input.Keyboard.KeyCodes.SEMICOLON_FIREFOX:
+            text = ";";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.COMMA || Phaser.Input.Keyboard.KeyCodes.COMMA_FIREFOX || Phaser.Input.Keyboard.KeyCodes.COMMA_FIREFOX_WINDOWS:
+            text = ",";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.PLUS:
+            text = "+";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.MINUS:
+            text = "-";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.PERIOD:
+            text = ".";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.FORWARD_SLASH:
+            text = "/";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.BACK_SLASH:
+            text = "\\";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.QUOTES:
+            text = "'";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.BACKTICK:
+            text = "`";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.OPEN_BRACKET || Phaser.Input.Keyboard.KeyCodes.BRACKET_LEFT_FIREFOX:
+            text = "[";
+            break;
+            case Phaser.Input.Keyboard.KeyCodes.CLOSED_BRACKET || Phaser.Input.Keyboard.KeyCodes.BRACKET_RIGHT_FIREFOX:
+            text = "]";
+            break;
+            
+            default:
+            text = "Unknown key";
+            break;
         }
         return text;
     }
