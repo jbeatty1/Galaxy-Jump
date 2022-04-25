@@ -1,0 +1,7 @@
+The following files were modified from images found in the tutorial at https://phasertutorials.com/creating-a-phaser-3-template-part-1/ :
+blue_boxCheckmark
+blue_button02
+blue_button03
+grey_box
+
+pauseScreen and nicePlay were created by Tony Imbesi using Fire Alpaca
