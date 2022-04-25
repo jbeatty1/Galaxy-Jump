@@ -159,7 +159,7 @@ export default class KeybindingScene extends Phaser.Scene {
       button.setText(this.changeText);
       // Change the controls to the key that was pressed
       this.input.keyboard.once("keydown", function(event) {
-        if (this.controls.codeToString(event.keyCode) != false) {
+        if (this.controls.codeToString(event.keyCode) != "Unknown key") {
           button.setText(this.controls.codeToString(event.keyCode));
           this.controls.changeControls(action, event.keyCode);
         }
