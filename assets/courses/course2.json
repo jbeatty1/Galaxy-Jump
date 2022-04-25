@@ -896,14 +896,14 @@
                 {
                  "gid":66,
                  "height":32,
-                 "id":152,
+                 "id":258,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":32,
-                 "x":12388,
-                 "y":1037
+                 "x":392,
+                 "y":1252
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -912,7 +912,7 @@
          "y":0
         }],
  "nextlayerid":14,
- "nextobjectid":258,
+ "nextobjectid":259,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.8.2",
