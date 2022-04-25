@@ -6,7 +6,7 @@ import 'phaser';
   The Preloader scene will show the loading graphics and
   load additional assets.
 
-  Modified by Tony Imbesi, 4/12/2022
+  Modified by Tony Imbesi, 4/22/2022
 */
 export default class PreloaderScene extends Phaser.Scene {
   constructor () {
@@ -128,10 +128,12 @@ export default class PreloaderScene extends Phaser.Scene {
         // this.load.image('semisolid', 'assets/tilesets/platformPack_tilesheet.png');
         this.load.image('tiles', 'assets/tilesets/fantasy-tiles_32x32.png');
         this.load.image('tiles1', 'assets/tilesets/course1.png');
-        // this.load.image('tiles2', 'assets/tilesets/fantasy-tiles_32x32.png');
-        // this.load.image('tiles3', 'assets/tilesets/fantasy-tiles_32x32.png');
-
+        this.load.image('tiles3', 'assets/tilesets/course3.png');
+        
         this.load.image('objects', 'assets/tilesets/objects.png');
+        this.load.image('objects3', 'assets/tilesets/objects3.png');
+        
+
         this.load.image('cannon', 'assets/entities/cannon.png');
         this.load.spritesheet('laser', 'assets/entities/laserCannon.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('laserbeam', 'assets/entities/laserbeam.png')
@@ -157,6 +159,7 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.spritesheet('goal2', 'assets/entities/goal2.png', { frameWidth: 56, frameHeight: 48 });
 
         this.load.image('titleBg', 'assets/bg/titleBack.png');
+        this.load.image('nicePlay', 'assets/ui/nicePlay.png');
 
         this.load.image('dKickParticle', 'assets/entities/dKickParticle.png');
 
@@ -170,6 +173,10 @@ export default class PreloaderScene extends Phaser.Scene {
   }
 
   create () {
+        // Create all the sound events
+        // this.sound.add('japeFoot', {volume: 0.45, loop: true});
+        // this.sound.add('pauseEnter', { volume: 0.5, loop: false });
+        // this.sound.add('pauseExit', { volume: 0.5, loop: false });
   }
 
   init () {
