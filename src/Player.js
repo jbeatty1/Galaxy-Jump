@@ -300,14 +300,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Move animation for premade "dude" asset
         this.anims.create({
             key: 'move',
-            frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 2 }),
+            frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 4 }),
             frameRate: 8,
             repeat: -1
         });
 
         this.anims.create({
             key: 'fast',
-            frames: this.anims.generateFrameNumbers('dude', { start: 3, end: 6 }),
+            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
             frameRate: 10,
             repeat: -1
         });
