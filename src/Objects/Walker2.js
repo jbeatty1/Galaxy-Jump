@@ -16,7 +16,7 @@ export default class Walker2 extends Enemy {
         // Basic variables:
         this.recoilVulnerable = true;
         this.alive = true;
-        this.damage = 65;
+        this.damage = 55;
         this.recoilX = 200;
         this.recoilY = 200;
 
