@@ -1,0 +1,27 @@
+The following sounds were made by Tony Imbesi using the audio software Bfxr, found at https://www.bfxr.net/:
+jump
+jump2
+hurt (placeholder)
+hurt2 (placeholder)
+
+
+playerFlip.ogg is a modified version of the sound 394412__inspectorj__bamboo-swing-a12.wav made by InspectorJ from freesound.org.
+playerKick.ogg is also a modified version of the sound 535359__eminyildirim__combat-whooshes.wav made by EmilyYILDIRIM from freesound.org.
+Both sound files were modified by Tony Imbesi using Studio One 5 by Presonus. (These are both placeholder sounds)
+
+The following sound files were made from scratch by Tony Imbesi using Studio one 5:
+dropKick
+dropKickCharge
+dropKickRebound
+enemyLaserCharge
+enemyLaserFire
+enemyLaserFiring
+lose
+win
+rebound
+laserFound
+powerupFound
+speedupFound
+doublejumpFound
+healthWarn
+checkpoint
