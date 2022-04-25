@@ -22,7 +22,7 @@ export default class CometSpawner extends Phaser.Physics.Arcade.Sprite {
      constructor(scene, x, y, key) {
         // Basic construction function calls
         super(scene, x, y, key);
-        console.log(x);
+      //   console.log(x);
         scene.add.existing(this);
         scene.physics.add.existing(this);
         this.setTexture('comet');

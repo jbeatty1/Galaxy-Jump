@@ -22,8 +22,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      * @param {Phaser.Tilemaps.TilemapLayer} solids the tile layer for solid terrain
      * @param {Phaser.Tilemaps.TilemapLayer} semisolids the tile layer for semisolid platforms
      * @param {PlayerController} input the keyboard input
+     * @param {Number} coins the max number of coins in the level
      */
-    constructor(config, solids, enemies, input) {
+    constructor(config, solids, enemies, input, coins) {
         super(config.scene, config.x, config.y, "dude");
         this.scene = config.scene;
         this.solids = solids;
@@ -241,7 +242,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.kickDirection = 0;
 
         // Items found:
-        this.coinCount = 0;
+        this.coinsFound = 0;
         this.foundLaser = false;
         this.foundDoubleJump = false;
         this.foundSpeedUp = false;
@@ -251,12 +252,28 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Item UI variables:
         // Make a new UI class to display the coin count and powerups taken
-        this.itemsDisplay = this.scene.add.text(30, 50, '', {
+        this.maxCoins = coins;
+        this.itemsDisplay = this.scene.add.text(50, 50, '', {
             fontSize: '20px',
             fill: '#ffffff'
         });
+        this.coinUI = this.scene.add.sprite(30, 58, 'coin', 0);
+        this.coinUI.setScrollFactor(0);
+        this.coinUI.setDepth(10);
         this.itemsDisplay.setScrollFactor(0);
         this.itemsDisplay.setDepth(10);
+        this.laserUI = this.scene.add.sprite(160, 30, 'laserItem', 0);
+        this.doubleJumpUI = this.scene.add.sprite(200, 32, 'doublejump', 0);
+        this.speedUI = this.scene.add.sprite(238, 30, 'speedup', 0);
+        this.laserUI.setScrollFactor(0);
+        this.laserUI.setDepth(10);
+        this.laserUI.setVisible(false);
+        this.doubleJumpUI.setScrollFactor(0);
+        this.doubleJumpUI.setDepth(10);
+        this.doubleJumpUI.setVisible(false);
+        this.speedUI.setScrollFactor(0);
+        this.speedUI.setDepth(10);
+        this.speedUI.setVisible(false);
 
         
 
@@ -283,15 +300,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Move animation for premade "dude" asset
         this.anims.create({
             key: 'move',
-            frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 4 }),
-            frameRate: 10,
+            frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 2 }),
+            frameRate: 8,
             repeat: -1
         });
 
         this.anims.create({
             key: 'fast',
-            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-            frameRate: 12,
+            frames: this.anims.generateFrameNumbers('dude', { start: 3, end: 6 }),
+            frameRate: 10,
             repeat: -1
         });
 
@@ -690,7 +707,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
             if (this.sliding && this.ticks < this.ticksToSlideEnd)
             {
-                console.log("Slide alignment");
+                // console.log("Slide alignment");
                 this.alignPlayerSlide();
                 this.crouching = true;
                 this.anims.play('slide');
@@ -757,7 +774,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 && !this.body.onFloor() && !this.sideKicking && !this.sliding && this.canLaser)
             {
                 this.anims.play('charge', true);
-                console.log("Laser init working");
+                // console.log("Laser init working");
                 this.laserPrep = true;
                 this.ticksToLaser = this.ticks + this.L_LASER_WINDUP;
                 // Attack duration timer starts at the same time as the windup, so add windup time
@@ -802,7 +819,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                     this.lasering = false;
                     this.clearSprites();
                     this.laserPrep = false;
-                    console.log("Laser ended");
+                    // console.log("Laser ended");
                     this.canLaser = false;
                     if (this.laser != null) {
                         this.laser.destroy();
@@ -1084,12 +1101,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                     this.animsResetFlag = false;
                     if (this.cursors.down.isUp && (!this.animsHoldFlag || (this.animsHoldFlag && this.ticks >= this.atkDelayEnd))) {
                         this.anims.play('turn', true);
-                        console.log("Animation reset");
+                        // console.log("Animation reset");
                         this.animsHoldFlag = false;
                     }
                     else if (this.laserPrep) {
                         this.anims.play('charge', true);
-                        console.log("Laser charge");
+                        // console.log("Laser charge");
                         this.animsHoldFlag = false;
                     }
                 }
@@ -1097,7 +1114,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             
             if (!this.body.onFloor() && !(this.animsHoldFlag || this.animsResetFlag) && !this.laserPrep) {
                 if (this.body.velocity.y <= 0) {
-                    console.log("Jump animation + " + (this.laserPrep));
+                    // console.log("Jump animation + " + (this.laserPrep));
                     this.anims.play("jump", true);
                 }
                 else {
@@ -1148,10 +1165,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.map.getTilesWithinWorldXY(this.body.x, this.body.y - 20, this.body.width, 2, {}, this.cam, this.solids).forEach((tile) => {
             if (tile.properties.solid && !tile.properties.semisolid) {
                 found = true;
-                console.log("Tile at " + tile.pixelX + ", " + tile.pixelY + "is solid");
+                // console.log("Tile at " + tile.pixelX + ", " + tile.pixelY + "is solid");
             }
             else {
-                console.log("Tile at " + tile.pixelX + ", " + tile.pixelY + "is not solid");
+                // console.log("Tile at " + tile.pixelX + ", " + tile.pixelY + "is not solid");
             }
         });
         return found;
@@ -1935,10 +1952,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      */
     collectItem(body, item) {
         if (item.itemType == item.itemEnum.COIN) {
+            this.coinsFound++;
             if (this.model.soundOn === true) {
-                this.sfxItem.play(); // replace with coin sound effect
+                if (this.coinsFound < this.maxCoins) {
+                    this.sfxItem.play(); // replace with coin sound effect
+                }
+                else {
+                    this.sfxCheckpoint.play();
+                    // this.coinUI.setTexture('nicePlay');
+                }
             }
-            this.coinCount++;
         }
         if (item.itemType == item.itemEnum.LASER) {
             if (this.model.soundOn === true) {
@@ -1979,16 +2002,20 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
      */
     updateItemDisplay() {
         // Begin modified code from Josiah Cornelius's 'Collectibles.js'
-        var displayString = "Coins collected: " + this.coinCount;
+        var displayString = "Coins collected: " + this.coinsFound + " / " + this.maxCoins;
         if (this.foundLaser) {
-            displayString += "\n Found the LASER upgrade!";
+            displayString += "\n-Found the LASER upgrade!";
+            this.laserUI.setVisible(true);
         }
         if (this.foundDoubleJump) {
-            displayString += "\n Found the DOUBLE JUMP upgrade!";
+            displayString += "\n-Found the DOUBLE JUMP upgrade!";
+            this.doubleJumpUI.setVisible(true);
         }
         if (this.foundSpeedUp) {
-            displayString += "\n Found the SPEED UP!";
+            displayString += "\n-Found the SPEED UP!";
+            this.speedUI.setVisible(true);
         }
+        
         this.itemsDisplay.setText(displayString);
         // End modified code from Josiah Cornelius's 'Collectibles.js'
     }
@@ -2019,6 +2046,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // Save progress: increase the levelCleared number if you cleared a later course
         if (Number(localStorage.levelCleared) < this.scene.clearId) {
             localStorage.levelCleared = this.scene.clearId;
+            // Also record if the level was cleared with all coins collected
+            if (this.coinsFound >= this.maxCoins) {
+                localStorage.setItem("fullClear" + this.scene.clearId, true);
+            }
         }
 
         // Begin modified code from Josiah Cornelius

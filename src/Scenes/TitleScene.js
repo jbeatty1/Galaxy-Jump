@@ -40,8 +40,15 @@ export default class TitleScene extends Phaser.Scene {
         // rendering that sound impossible to modify.
         // Only update the sound reference if this.bgMusic has no reference already.
         // this.bgMusic starts with a reference if this scene is entered through the PauseScreen.
-        if (this.bgMusic == null)
+        
+        if (this.bgMusic == null) {
             this.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
+        }
+        else if (this.bgMusic.key != 'titleMusic') {
+            console.log("music key: " + this.bgMusic.key);
+            this.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
+        }
+            
         this.sys.game.globals.bgMusic = this.bgMusic;
 
         this.background = this.add.image(0, 0, "titleBg")
@@ -78,5 +85,6 @@ export default class TitleScene extends Phaser.Scene {
         }
 
         this.sound.pauseOnBlur = false;
+        console.log("music events: " + this.sound.getAll('titleMusic').length); 
     }
 }
