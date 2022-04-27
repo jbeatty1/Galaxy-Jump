@@ -6,7 +6,7 @@ import 'phaser';
   The Preloader scene will show the loading graphics and
   load additional assets.
 
-  Modified by Tony Imbesi, 4/12/2022
+  Modified by Tony Imbesi, 4/22/2022
 */
 export default class PreloaderScene extends Phaser.Scene {
   constructor () {
@@ -14,7 +14,7 @@ export default class PreloaderScene extends Phaser.Scene {
   }
   preload () {
         // add logo image
-        this.add.image(400, 200, 'logo');
+        // this.add.image(400, 200, 'logo');
         // display progress bar
         var progressBar = this.add.graphics();
         var progressBox = this.add.graphics();
@@ -96,6 +96,7 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.audio('jump', ['assets/sounds/jump1B.ogg']);
         this.load.audio('jump2', ['assets/sounds/jump2B.ogg']);
         this.load.audio('playerKick', ['assets/sounds/playerKick.ogg']);
+        this.load.audio('playerSlide', ['assets/sounds/playerSlide.ogg']);
         this.load.audio('playerFlip', ['assets/sounds/playerFlip.ogg']);
         this.load.audio('rebound', ['assets/sounds/reboundB.ogg']);
 
@@ -113,6 +114,9 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.audio('dropKickRebound', ['assets/sounds/dropKickReboundC.ogg']);
         this.load.audio('playerLaser', ['assets/sounds/playerLaserB.ogg']);
 
+        this.load.audio('softBlockBreak', ['assets/sounds/softBlockBreak.ogg']);
+        this.load.audio('hardBlockBreak', ['assets/sounds/hardBlockBreak.ogg']);
+
         this.load.audio('enemyLaserCharge', ['assets/sounds/enemyLaserChargeC.ogg']);
         this.load.audio('enemyLaserFire', ['assets/sounds/enemyLaserFireC.ogg']);
         this.load.audio('enemyLaserFiring', ['assets/sounds/enemyLaserFiringE.ogg']);
@@ -128,15 +132,18 @@ export default class PreloaderScene extends Phaser.Scene {
         // this.load.image('semisolid', 'assets/tilesets/platformPack_tilesheet.png');
         this.load.image('tiles', 'assets/tilesets/fantasy-tiles_32x32.png');
         this.load.image('tiles1', 'assets/tilesets/course1.png');
-        // this.load.image('tiles2', 'assets/tilesets/fantasy-tiles_32x32.png');
-        // this.load.image('tiles3', 'assets/tilesets/fantasy-tiles_32x32.png');
-
+        this.load.image('tiles2', 'assets/tilesets/course2.png');
+        this.load.image('tiles3', 'assets/tilesets/course3.png');
+        
         this.load.image('objects', 'assets/tilesets/objects.png');
-        this.load.image('cannon', 'assets/entities/cannon.png');
+        this.load.image('objects3', 'assets/tilesets/objects3.png');
+        
+
+        // this.load.image('cannon', 'assets/entities/cannon.png');
         this.load.spritesheet('laser', 'assets/entities/laserCannon.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('laserbeam', 'assets/entities/laserbeam.png')
         this.load.spritesheet('laserdown', 'assets/entities/laserdown.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('copter', 'assets/entities/copter.png', { frameWidth: 32, frameHeight: 32 });
+        // this.load.spritesheet('copter', 'assets/entities/copter.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('jumpster', 'assets/entities/jumpster.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('funbat', 'assets/entities/funbat.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('comet', 'assets/entities/comet.png', { frameWidth: 32, frameHeight: 32 });
@@ -157,6 +164,8 @@ export default class PreloaderScene extends Phaser.Scene {
         this.load.spritesheet('goal2', 'assets/entities/goal2.png', { frameWidth: 56, frameHeight: 48 });
 
         this.load.image('titleBg', 'assets/bg/titleBack.png');
+        this.load.image('howtoplay', 'assets/bg/howtoplay.png');
+        this.load.image('nicePlay', 'assets/ui/nicePlay.png');
 
         this.load.image('dKickParticle', 'assets/entities/dKickParticle.png');
 
@@ -170,6 +179,10 @@ export default class PreloaderScene extends Phaser.Scene {
   }
 
   create () {
+        // Create all the sound events
+        // this.sound.add('japeFoot', {volume: 0.45, loop: true});
+        // this.sound.add('pauseEnter', { volume: 0.5, loop: false });
+        // this.sound.add('pauseExit', { volume: 0.5, loop: false });
   }
 
   init () {

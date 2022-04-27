@@ -2,6 +2,7 @@
 
 import 'phaser';
 import Button from '../Objects/Button';
+import config from '../Config/config';
 
 /*
   This is a basic options menu.
@@ -16,7 +17,7 @@ export default class OptionsScene extends Phaser.Scene {
   create () {
     this.model = this.sys.game.globals.model;
 
-    this.text = this.add.text(300, 100, 'Options', { fontSize: 40 });
+    this.text = this.add.text(config.width / 2, 100, 'Options', { fontSize: 40 });
     this.musicButton = this.add.image(200, 200, 'checkedBox');
     this.musicText = this.add.text(250, 190, 'Music Enabled', { fontSize: 24 });
 
@@ -37,13 +38,15 @@ export default class OptionsScene extends Phaser.Scene {
     }.bind(this));
 
     
-    this.menuButton = new Button(this, 400, 500, 'blueButton1', 'blueButton2', 'Menu', 'Title');
+    this.menuButton = new Button(this, config.width / 2, 500, 'blueButton1', 'blueButton2', 'Menu', 'Title');
 
-    this.resetButton = new Button(this, 600, 500, 'blueButton1', 'blueButton2', 'Reset data?', null);
+    this.resetButton = new Button(this, config.width - 100, config.height - 50, 'blueButton1', 'blueButton2', 'Reset data?', null);
     this.resetButton.button.on('pointerdown', function() {
         localStorage.clear();
         this.resetButton.text.setText('Data reset...');
     }.bind(this));
+    this.resetButton.text.setFontSize(24);
+    Phaser.Display.Align.In.Center(this.resetButton.text, this.resetButton.button);
 
     this.updateAudio();
   }

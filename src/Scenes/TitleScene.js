@@ -40,8 +40,15 @@ export default class TitleScene extends Phaser.Scene {
         // rendering that sound impossible to modify.
         // Only update the sound reference if this.bgMusic has no reference already.
         // this.bgMusic starts with a reference if this scene is entered through the PauseScreen.
-        if (this.bgMusic == null)
+        
+        if (this.bgMusic == null) {
             this.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
+        }
+        else if (this.bgMusic.key != 'titleMusic') {
+            console.log("music key: " + this.bgMusic.key);
+            this.bgMusic = this.sound.add('titleMusic', { volume: 0.5, loop: true });
+        }
+            
         this.sys.game.globals.bgMusic = this.bgMusic;
 
         this.background = this.add.image(0, 0, "titleBg")
@@ -51,7 +58,7 @@ export default class TitleScene extends Phaser.Scene {
         this.background.displayHeight = this.sys.canvas.height;
 
 
-        var text = this.add.text(100,100, 'Galaxy Jump!', { color: '#00ff00', align: 'right' });
+        // var text = this.add.text(100,100, 'Galaxy Jump!', { color: '#00ff00', align: 'right' });
 
 
         // Game
@@ -60,12 +67,15 @@ export default class TitleScene extends Phaser.Scene {
         this.selectButton = new Button(this, config.width/2 + 100, config.height/2 - 100, 'blueButton1', 'blueButton2', 'Continue', 'Select');
         
         // Options
-        this.optionsButton = new Button(this, config.width/2 - 100, config.height/2 + 50, 'blueButton1', 'blueButton2', 'Options', 'Options');
+        this.optionsButton = new Button(this, config.width/2 + 100, config.height/2 + 50, 'blueButton1', 'blueButton2', 'Options', 'Options');
         // Keybinding
-        this.keybindingButtonn =  new Button(this, config.width/2 + 100, config.height/2 + 50, 'blueButton1', 'blueButton2', 'Controls', 'Keybinding');
+        this.keybindingButtonn =  new Button(this, config.width/2 - 100, config.height/2 + 200, 'blueButton1', 'blueButton2', 'Controls', 'Keybinding');
         
         // Credits
-        this.creditsButton = new Button(this, config.width/2, config.height/2 + 200, 'blueButton1', 'blueButton2', 'Credits', 'Credits');
+        this.creditsButton = new Button(this, config.width/2 + 100, config.height/2 + 200, 'blueButton1', 'blueButton2', 'Credits', 'Credits');
+
+        // Tutorial
+        this.howToButton = new Button(this, config.width/2 - 100, config.height/2 + 50, 'blueButton1', 'blueButton2', 'Tutorial', 'HowToScene');
         
 		
 
@@ -77,6 +87,8 @@ export default class TitleScene extends Phaser.Scene {
             this.sys.game.globals.bgMusic = this.bgMusic;
         }
 
-        this.sound.pauseOnBlur = false;
+        // this.sound.pauseOnBlur = false;
+        console.log("music events: " + this.sound.getAll('titleMusic').length); 
+        this.input.keyboard.enableGlobalCapture();
     }
 }
