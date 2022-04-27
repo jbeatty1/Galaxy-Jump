@@ -1,5 +1,5 @@
 /**
-Course 3. All course files will be copied from testCourse.js.
+Course 2. All course files will be copied from testCourse.js.
 
 For Galaxy Jump project.
 
@@ -8,7 +8,7 @@ If you want to see what everything else is, I would recommend looking at the oth
 
 This is made using the Phaser 3 game engine from https://github.com/photonstorm/phaser
 @author Tony Imbesi
-@version 4/16/2022
+@version 4/22/2022
 
 License: https://opensource.org/licenses/MIT|MIT License
 Copyright 2020 Photon Storm Ltd.
@@ -85,18 +85,50 @@ export default class Course3 extends Phaser.Scene {
         // To make a tile this.map, load the image, then load the .json file created in Tiled
         // this.load.image('tiles', 'assets/tilesets/ground_1x1.png');
         
-        this.load.tilemapTiledJSON('this.map3', 'assets/courses/course3.json');
+        this.load.tilemapTiledJSON('map3', 'assets/courses/course3.json');
     }
 
     
     
     create ()
     {
-        this.nextLevel = 'Course3';
+        this.nextLevel = 'Credits';
         this.clearId = 3; // Number used to track saved progress. Each course is numbered from 1 to 3.
-        this.sound.pauseOnBlur = false;
+        // this.sound.pauseOnBlur = false;
+        this.bgMusic = this.sound.get('psychoZone');
+        this.seek = 0;
+        if (this.bgMusic != null) {
+            this.seek = this.bgMusic.seek;
+        }
         this.sound.stopAll();
+        this.sound.removeAll();
         this.model = this.sys.game.globals.model;
+
+        // Handle music: Replace current bgMusic with this level's music
+        // this.bgMusic = this.sys.game.globals.bgMusic;
+       
+        // if (this.model.bgMusicPlaying)
+        //     this.bgMusic.stop();
+        
+        // if (this.bgMusic.key == 'japeFoot') {
+        //     console.log("Key matching");
+        // }
+        // else {
+        //     console.log("Key not matching: " + this.bgMusic.key);
+        // }
+        this.bgMusic = this.sound.add('psychoZone', { volume: 0.3, loop: true });
+        if (this.model.musicOn === true) {
+            this.bgMusic.play();
+            this.bgMusic.setSeek(this.seek);
+            this.model.bgMusicPlaying = true;
+            // this.levelThemePlaying = true;
+        }
+        
+        this.sys.game.globals.bgMusic = this.bgMusic;
+        // console.log("Global: " + this.sys.game.globals.bgMusic.key);
+        // console.log("Local: " + this.bgMusic.key);
+
+        // General world settings
         this.physics.world.gravity.set(0, 700);
         this.physics.world.setBoundsCollision(true, true, false, false);
         /** Make sure the width and height matches the dimensions of the tileset! */
@@ -111,7 +143,7 @@ export default class Course3 extends Phaser.Scene {
         // loadTiles(this);
         // loadEntities(this);
         this.map = this.make.tilemap({
-            key: 'this.map3',
+            key: 'map3',
         });
         
 
@@ -122,13 +154,13 @@ export default class Course3 extends Phaser.Scene {
         // First argument of addTilesetImage is the name of the tileset as shown in Tiled.
         // Second argument is the key of the image used in the tileset.
         /** Add in spikes */
-        this.dangerTiles = this.map.addTilesetImage('objects', 'objects');
+        this.dangerTiles = this.map.addTilesetImage('objects', 'objects3');
         this.spikes = this.map.createLayer('spikes', this.dangerTiles, 0, 0);
         this.spikes.setCollisionByProperty({ spikes: true }, true);
         this.heat = this.map.createLayer('heat', this.dangerTiles, 0, 0);
         this.heat.setDepth(3);
 
-        this.terrainTiles = this.map.addTilesetImage('fantasy-tiles_32x32', 'tiles1');
+        this.terrainTiles = this.map.addTilesetImage('fantasy-tiles_32x32', 'tiles3');
         this.solids = this.map.createLayer('terrain', this.terrainTiles, 0, 0);
         this.solids.setDepth(1);
         
@@ -277,7 +309,7 @@ export default class Course3 extends Phaser.Scene {
         });
         // Remove default config information
         this.items.defaults = {};
-        console.log("Made items group");
+        // console.log("Made items group");
         this.itemArray = this.map.createFromObjects('items', [
             { 
                 // Find the gid by checking the firstgid value in the tileset as shown in the course's .json file
@@ -302,8 +334,13 @@ export default class Course3 extends Phaser.Scene {
         this.testItem = this.itemArray[0];
         this.items.addMultiple(this.itemArray);
         // Do this to start the scene with each item's texture loaded properly.
+        this.coinCount = 0;
         this.items.children.iterate(c => {
             c.setTexture(c.textureKey);
+            // Also count the number of coins in the course
+            if (c instanceof Coin) {
+                this.coinCount++;
+            }
         });
         this.items.setDepth(0);
 
@@ -332,11 +369,11 @@ export default class Course3 extends Phaser.Scene {
                 c.setActive(false);
                 c.setVisible(false);
                 c.triggered = true;
-                console.log("Checkpoint removed");
+                // console.log("Checkpoint removed");
             }
             else {
-                console.log("Checkpoint: " + c.x);
-                console.log("SpawnX: " + this.model.spawnX);
+                // console.log("Checkpoint: " + c.x);
+                // console.log("SpawnX: " + this.model.spawnX);
                 c.setTexture("checkpoint");
             }
         });
@@ -383,7 +420,7 @@ export default class Course3 extends Phaser.Scene {
         this.screenHeight = this.cameras.main.height;
 
         // This line instantly sets up the player.
-        this.player = new Player({scene:this, x:spawnX, y:spawnY}, this.solids, this.enemies, this.controls);
+        this.player = new Player({scene:this, x:spawnX, y:spawnY}, this.solids, this.enemies, this.controls, this.coinCount);
         
         //this.player.setTexture(this.textures.get('dude'));
         
@@ -433,20 +470,7 @@ export default class Course3 extends Phaser.Scene {
         
         // this.player.setCollideWorldBounds(true);
 
-        // Handle music: Replace current bgMusic with this level's music
-        this.bgMusic = this.sys.game.globals.bgMusic;
-       
-        if (this.model.bgMusicPlaying)
-            this.bgMusic.stop();
-
-        this.bgMusic = this.sound.add('psychoZone', { volume: 0.3, loop: true });
-        if (this.model.musicOn === true) {
-            this.bgMusic.play();
-            this.model.bgMusicPlaying = true;
-            // this.levelThemePlaying = true;
-        }
         
-        this.sys.game.globals.bgMusic = this.bgMusic;
 
         this.sfxPause = this.sound.add('pauseEnter', { volume: 0.5, loop: false });
         this.sfxUnpause = this.sound.add('pauseExit', { volume: 0.5, loop: false });
@@ -488,6 +512,26 @@ export default class Course3 extends Phaser.Scene {
                 img.tilePositionX += Math.cos(iter) * 0.5;
             });
             this.heatIter += 0.005;
+
+            // Music player
+            if (this.model.musicOn === true && this.model.bgMusicPlaying === false) {
+                if (!this.bgMusic.isPaused) {
+                    this.bgMusic.play();
+                    console.log("music playing");
+                }
+                else {
+                    this.bgMusic.resume();
+                    console.log("music resuming");
+                }
+            
+                this.model.bgMusicPlaying = true;
+                // this.sys.game.globals.bgMusic = this.bgMusic;
+            }
+            else if (this.model.musicOn === false && this.model.bgMusicPlaying === true) {
+                this.bgMusic.pause();
+                console.log("music pausing");
+                this.model.bgMusicPlaying = false;
+            }
         }
 
         // Debug check for frame-by-frame updating
@@ -499,6 +543,7 @@ export default class Course3 extends Phaser.Scene {
         // You can toggle the music at any time by pressing the M key
         if (Phaser.Input.Keyboard.JustDown(this.controls.mute)) {
             this.model.musicOn = !this.model.musicOn;
+            this.model.soundOn = this.model.musicOn;
             console.log(this.model.musicOn);
         }
 
@@ -595,26 +640,8 @@ export default class Course3 extends Phaser.Scene {
         //     + '\nPress Q to reload map.'
         //     + '\n Press M to mute/unmute');
 
-        // Music player
-        if (this.model.musicOn === true && this.model.bgMusicPlaying === false) {
-            if (!this.bgMusic.isPaused) {
-                this.bgMusic.play();
-                console.log("music playing");
-            }
-            else {
-                this.bgMusic.resume();
-                console.log("music resuming");
-            }
         
-            this.model.bgMusicPlaying = true;
-            // this.sys.game.globals.bgMusic = this.bgMusic;
-        }
-        else if (this.model.musicOn === false && this.model.bgMusicPlaying === true) {
-            this.bgMusic.pause();
-            console.log("music pausing");
-            this.model.bgMusicPlaying = false;
-        }
-        // console.log("music events: " + this.sound.getAll('japeFoot').length); 
+        // console.log("music events: " + this.sound.getAll('japeFoot').length + " sound events: " + this.sound.getAll("pauseEnter").length); 
     } // END update
     
     /**
